@@ -16,7 +16,7 @@ func RenewablesHandler(w http.ResponseWriter, r *http.Request) {
 		HandleRenewablesHistory(w, r)
 		break
 	default:
-		http.Error(w, "Endpoint does not exist. Renewables has endpoints /current and /history", http.StatusBadRequest)
+		http.Error(w, "Endpoint does not exist. Renewables has endpoints \"current\" and \"/history\"", http.StatusBadRequest)
 		return
 	}
 }

@@ -2,29 +2,22 @@ package Handler
 
 import (
 	"net/http"
-	"strings"
 )
 
 func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-
 	switch r.Method {
-	case "DELETE":
-		if len(parts) == 5 {
-			NotificationsDeleteHandler(w, r)
-		} else {
-			http.Error(w, "ERROR: invalid URL for method. Correct path : "+BASEPATH+NOTIFICATIONSPATH+"/{id}", http.StatusBadRequest)
-			return
-		}
+	case http.MethodDelete:
+		NotificationsDeleteHandler(w, r)
 		break
 
-	case "POST":
+	case http.MethodPost:
 		NotificationsPostHandler(w, r)
 		break
 
-	case "GET":
+	case http.MethodGet:
 		NotificationsGetHandler(w, r)
 		break
+
 	default:
 		http.Error(w, "ERROR: invalid request method. Endpoint has supported methods GET, POST and DELETE", http.StatusBadRequest)
 		return
