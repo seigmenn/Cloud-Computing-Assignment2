@@ -30,7 +30,6 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Error(w, "OK", http.StatusOK)
 }
 
 func NotificationsDeleteHandler(w http.ResponseWriter, r *http.Request) {

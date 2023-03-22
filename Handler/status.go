@@ -36,5 +36,4 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error when returning output", http.StatusInternalServerError)
 	}
 
-	http.Error(w, "OK", http.StatusOK)
 }

@@ -18,9 +18,10 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Prepare output returned to client
 	output := "This service offers the" +
-		"<a href=\"/unisearcher/v1/uniinfo/\">/unisearcher/v1/uniinfo/</a> endpoint, " +
-		"the <a href=\"/unisearcher/v1/neighbourunis/\">/unisearcher/v1/neighbourunis/</a> endpoint, " +
-		"and the <a href=\"/unisearcher/v1/diag/\">/unisearcher/v1/diag/</a> endpoint"
+		"<a href=\"" + Handler.RENEWABLESPATH + "/current\"> " + Handler.RENEWABLESPATH + "/current</a> endpoint, " + Handler.LINEBREAK +
+		"<a href=\"" + Handler.RENEWABLESPATH + "/history\"> " + Handler.RENEWABLESPATH + "/history</a> endpoint, " + Handler.LINEBREAK +
+		"<a href=\"" + Handler.NOTIFICATIONSPATH + "\"> " + Handler.NOTIFICATIONSPATH + "</a> endpoint, " + Handler.LINEBREAK +
+		"<a href=\"" + Handler.STATUSPATH + "\"> " + Handler.STATUSPATH + "</a> endpoint, "
 
 	// Write output to client
 	_, err := fmt.Fprintf(w, "%v", output)

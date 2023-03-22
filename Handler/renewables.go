@@ -7,7 +7,7 @@ import (
 
 func RenewablesHandler(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
-	request := parts[4]
+	request := parts[len(parts)]
 	switch request {
 	case "current":
 		HandleRenewablesCurrent(w, r)
@@ -19,7 +19,6 @@ func RenewablesHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Endpoint does not exist. Renewables has endpoints /current and /history", http.StatusBadRequest)
 		return
 	}
-	http.Error(w, "OK", http.StatusOK)
 }
 
 func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request) {
