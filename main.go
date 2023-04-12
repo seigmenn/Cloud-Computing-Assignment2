@@ -2,11 +2,28 @@ package main
 
 import (
 	"assignment-2/Handler"
+	"encoding/csv"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 )
+
+func readFromCSV(filePath string) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal("Couldn't read file "+filePath, err)
+		os.Exit(1)
+	}
+	csvReader := csv.NewReader(f)
+	allData, err := csvReader.ReadAll()
+	if err != nil {
+		log.Fatal("CSV file could not be parsed "+filePath, err)
+	}
+	for _, c := range allData {
+		fmt.Println(c)
+	}
+}
 
 /*
 Default handler displaying service information.
@@ -42,7 +59,7 @@ func main() {
 		log.Println("$PORT has not been set. Default: 8080")
 		port = "8080"
 	}
-
+	readFromCSV("renewable-share-energy.csv")
 	// Default handler for requests (just displays information and points to /diag)
 	http.HandleFunc("/", defaultHandler)
 	// Assign path for diagnostics handler (actual service feature)
