@@ -8,8 +8,8 @@ import (
 var StartTime = time.Now()
 
 type Country struct {
-	Name       string `json:"name"`
-	ISO        string `json:"isocode"`
-	Year       int    `json:"year"`
-	Percentage int    `json:"percentage"`
+	Name       string    `json:"name"`
+	ISO        string    `json:"isocode"`
+	Year       []int     `json:"year"`
+	Percentage []float64 `json:"percentage"`
 }
