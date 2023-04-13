@@ -2,67 +2,11 @@ package main
 
 import (
 	"assignment-2/Handler"
-	"encoding/csv"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 )
-
-func readFromCSV(filePath string) []Handler.Country {
-	f, err := os.Open(filePath)
-	if err != nil {
-		log.Fatal("Couldn't read file "+filePath, err)
-		os.Exit(1)
-	}
-	csvReader := csv.NewReader(f)
-	allData, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal("CSV file could not be parsed "+filePath, err)
-	}
-	oldName := ""
-	testCountries := []Handler.Country{}
-	tmpCountry := Handler.Country{}
-	for _, c := range allData {
-		newName := c[0]
-		if newName != oldName {
-			testCountries = append(testCountries, tmpCountry)
-			tmpCountry = Handler.Country{}
-			tmpCountry.Name = c[0]
-			tmpCountry.ISO = c[1]
-			year, _ := strconv.Atoi(c[2])
-			tmpCountry.Year = append(tmpCountry.Year, year)
-			if percentage, err := strconv.ParseFloat(c[3], 32); err == nil {
-				tmpCountry.Percentage = append(tmpCountry.Percentage, percentage)
-			}
-		} else {
-			year, _ := strconv.Atoi(c[2])
-			tmpCountry.Year = append(tmpCountry.Year, year)
-			if percentage, err := strconv.ParseFloat(c[3], 32); err == nil {
-				tmpCountry.Percentage = append(tmpCountry.Percentage, percentage)
-			}
-		}
-		oldName = newName
-	}
-	return testCountries
-}
-
-func printCountries() {
-
-	tmp := readFromCSV(Handler.CSVPATH)
-
-	for _, c := range tmp {
-		fmt.Println(c.Name)
-		fmt.Println(c.ISO)
-		for y := 0; y < len(c.Year); y++ {
-			year := strconv.Itoa(c.Year[y])
-			percent := strconv.FormatFloat(c.Percentage[y], 'E', -1, 32)
-			fmt.Println("Year: " + year + "\tPercent: " + percent)
-		}
-		fmt.Println("")
-	}
-}
 
 /*
 Default handler displaying service information.
@@ -98,7 +42,8 @@ func main() {
 		log.Println("$PORT has not been set. Default: 8080")
 		port = "8080"
 	}
-	printCountries()
+	//Test of CSV reading function
+	//printCountries()
 
 	// Default handler for requests (just displays information and points to /diag)
 	http.HandleFunc("/", defaultHandler)

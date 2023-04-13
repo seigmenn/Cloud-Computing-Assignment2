@@ -12,4 +12,5 @@ type Country struct {
 	ISO        string    `json:"isocode"`
 	Year       []int     `json:"year"`
 	Percentage []float64 `json:"percentage"`
+	Borders    []string  `json:"borders,omitempty"`
 }
