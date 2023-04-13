@@ -9,6 +9,11 @@ import (
 )
 
 func readFromCSV(filePath string) []Country {
+	nameIndex := 0
+	ISOIndex := 1
+	yearIndex := 2
+	percentageIndex := 3
+
 	f, err := os.Open(filePath)
 	//If file couldn't be opened return empty slice
 	if err != nil {
@@ -24,24 +29,26 @@ func readFromCSV(filePath string) []Country {
 	}
 	oldName := ""
 
-	countries := []Country{}
-	tmpCountry := Country{}
+	var countries []Country
+	var tmpCountry Country
 	for _, c := range allData {
-		newName := c[0]
+		newName := c[nameIndex]
 		//If new country:
 		if newName != oldName {
-			//Append last read Country struct
-			countries = append(countries, tmpCountry)
+			//Append last read Country struct if it has a valid name
+			if tmpCountry.Name != "" {
+				countries = append(countries, tmpCountry)
+			}
 			//Set name and ISOcode for new country
 			tmpCountry = Country{}
-			tmpCountry.Name = c[0]
-			tmpCountry.ISO = c[1]
+			tmpCountry.Name = c[nameIndex]
+			tmpCountry.ISO = c[ISOIndex]
 		}
 		//Reading year and percentage and appending to slices
-		year, _ := strconv.Atoi(c[2])
+		year, _ := strconv.Atoi(c[yearIndex])
 		tmpCountry.Year = append(tmpCountry.Year, year)
 		//Trying to parse from string to float
-		if percentage, err := strconv.ParseFloat(c[3], 32); err == nil {
+		if percentage, err := strconv.ParseFloat(c[percentageIndex], 32); err == nil {
 			tmpCountry.Percentage = append(tmpCountry.Percentage, percentage)
 		}
 		oldName = newName
@@ -52,7 +59,6 @@ func readFromCSV(filePath string) []Country {
 
 func countrySearch(ISOcode string) Country {
 	countries := readFromCSV(CSVPATH)
-	fmt.Println(ISOcode)
 	for _, c := range countries {
 		//If ISO codes match: return struct
 		if c.ISO == ISOcode {
