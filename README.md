@@ -34,11 +34,11 @@ Path: /energy/v1/renewables/current/{country}?{neighbours=bool}
 ```
 The endpoint returns the latest percentage of renewables in the energy mix.
 
-This endpoint includes the parameters:
-`{country}` - a 3-letter country code (optional)
+This endpoint includes the parameters:<br>
+`{country}` - a 3-letter country code (optional)<br>
 `{neighbours=bool}` - a bool indicating whether the values of neighbouring countries should be shown (optional)<br>
-Example request with country code and neighbours:
-`/energy/v1/renewables/current/nor?neighbours=true`
+<br>Example request with country code and neighbours:<br>
+`/energy/v1/renewables/current/nor?neighbours=true`<br>
 
 Example response:
 ```
@@ -73,8 +73,8 @@ Found in 1.9s
 
 ```
 
-Example request with country code:
-`energy/v1/renewables/current/usa`
+Example request with country code:<br>
+`energy/v1/renewables/current/usa`<br>
 
 Example response:
 ```
@@ -97,26 +97,26 @@ Path: energy/v1/renewables/history/{country}{begin=year&end=year}
 This endpoint returns all the historical percentages of renewables in the energy mix. If no country is specified each country will return the mean value of all the historical percentages in the energy mix.
 
 
-This endpoint includes the parameters:
-`{country}` - a 3-letter country code (optional)
-`{begin=year&end=year}` - limit the data returned to be within these two years (optional)
+This endpoint includes the parameters:<br>
+`{country}` - a 3-letter country code (optional)<br>
+`{begin=year&end=year}` - limit the data returned to be within these two years (optional)<br>
 
-Example request with country code:
-`energy/v1/renewables/history/usa`
-
-Example response:
-```
-```
-
-Example request with country code and begin and end year:
-`energy/v1/renewables/history/nor`
+Example request with country code:<br>
+`energy/v1/renewables/history/usa`<br>
 
 Example response:
 ```
 ```
 
-Example request with no optional parameters (return mean values):
-`energy/v1/renewables/history`
+Example request with country code and begin and end year:<br>
+`energy/v1/renewables/history/nor`<br>
+
+Example response:
+```
+```
+
+Example request with no optional parameters (return mean values):<br>
+`energy/v1/renewables/history`<br>
 
 Example response:
 ```
@@ -147,6 +147,7 @@ Found in 0s
  ...
  ]
 ```
+
 
 ## Webhook<br>
 ### Registration of webhook
