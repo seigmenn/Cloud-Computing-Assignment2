@@ -1,92 +1,156 @@
-# assignment-2
+# Overview of read.me
+- General notes
+- Repository layout
+- Endpoints
+	- Renewable percentages:
+		- Current percentage of renewables
+		- Historical percentages of renewables
+	- Webhook:
+		- Registration of webhook
+		- Deletion of webhook
+		- View registered webhook
+	- Status endpoint
+# Repository layout
+```
+.
+├── Handler                    : Module for API
+│   ├── CSVhandler.go          :
+│   ├── consts.go              :
+│   ├── notifications.go       :
+│   ├── renewables.go          :
+│   ├── status.go              :
+│   └── structs.go             : Internal API structs
+├── db_webhooks.go             :
+├── go.mod                     :
+├── main.go                    : Main application
+├── renewable-share-energy.csv : Data used by handler
+└── README.md
+```
+# Endpoints
+## Renewable percentages<br>
+### Current percentage of renewables
+```
+Path: /energy/v1/renewables/current/{country}?{neighbours=bool}
+```
+The endpoint returns the latest percentage of renewables in the energy mix.
 
+This endpoint includes the parameters:<br>
+`{country}` - a 3-letter country code (optional)<br>
+`{neighbours=bool}` - a bool indicating whether the values of neighbouring countries should be shown (optional)<br>
+<br>Example request with country code and neighbours:<br>
+`/energy/v1/renewables/current/nor?neighbours=true`<br>
 
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+Example response:
+```
+Number of matches: 4
+Found in 1.9s
+[
+ {
+  "name": "Norway",
+  "isoCode": "NOR",
+  "year": 2021,
+  "percentage": 71.55836486816406
+ },
+ {
+  "name": "Finland",
+  "isoCode": "FIN",
+  "year": 2021,
+  "percentage": 34.611289978027344
+ },
+ {
+  "name": "Sweden",
+  "isoCode": "SWE",
+  "year": 2021,
+  "percentage": 50.924007415771484
+ },
+ {
+  "name": "Russia",
+  "isoCode": "RUS",
+  "year": 2021,
+  "percentage": 6.620289325714111
+ }
+]
 
 ```
-cd existing_repo
-git remote add origin https://git.gvk.idi.ntnu.no/course/prog2005/prog2005-2023-workspace/larmha/assignment-2.git
-git branch -M main
-git push -uf origin main
+
+Example request with country code:<br>
+`energy/v1/renewables/current/usa`<br>
+
+Example response:
+```
+Number of matches: 1
+Found in 0s
+[
+ {
+  "name": "United States",
+  "isoCode": "USA",
+  "year": 2021,
+  "percentage": 10.655990600585938
+ }
+]
 ```
 
-## Integrate with your tools
+### Historical percentages of renewables
+```
+Path: energy/v1/renewables/history/{country}{begin=year&end=year}
+```
+This endpoint returns all the historical percentages of renewables in the energy mix. If no country is specified each country will return the mean value of all the historical percentages in the energy mix.
 
-- [ ] [Set up project integrations](https://git.gvk.idi.ntnu.no/course/prog2005/prog2005-2023-workspace/larmha/assignment-2/-/settings/integrations)
 
-## Collaborate with your team
+This endpoint includes the parameters:<br>
+`{country}` - a 3-letter country code (optional)<br>
+`{begin=year&end=year}` - limit the data returned to be within these two years (optional)<br>
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+Example request with country code:<br>
+`energy/v1/renewables/history/usa`<br>
 
-## Test and Deploy
+Example response:
+```
+```
 
-Use the built-in continuous integration in GitLab.
+Example request with country code and begin and end year:<br>
+`energy/v1/renewables/history/nor`<br>
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+Example response:
+```
+```
 
-***
+Example request with no optional parameters (return mean values):<br>
+`energy/v1/renewables/history`<br>
 
-# Editing this README
+Example response:
+```
+Number of matches: 103
+Found in 0s
+[
+ ...
+	{
+	  "name": "Australia",
+	  "isoCode": "AUS",
+	  "percentage": 5.300048171428212
+	 },
+	 {
+	  "name": "Austria",
+	  "isoCode": "AUT",
+	  "percentage": 29.462373633133737
+	 },
+	 {
+	  "name": "Azerbaijan",
+	  "isoCode": "AZE",
+	  "percentage": 3.2902767239390194
+	 },
+	 {
+	  "name": "Bangladesh",
+	  "isoCode": "BGD",
+	  "percentage": 2.5659469354386424
+	 }
+ ...
+ ]
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## Webhook<br>
+### Registration of webhook
+### Deletion of webhook
+### View registered webhook
+## Status endpoint<br>
