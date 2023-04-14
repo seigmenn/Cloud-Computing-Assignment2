@@ -2,7 +2,6 @@ package Handler
 
 import (
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -19,14 +18,14 @@ func readFromCSV(filePath string) ([]Country, error) {
 	//If file couldn't be opened return empty slice
 	if err != nil {
 		log.Fatal("Couldn't read file "+filePath, err)
-		return []Country{}, errors.New("couldn't read file")
+		return []Country{}, ERRFILEREAD
 	}
 	csvReader := csv.NewReader(f)
 	allData, err := csvReader.ReadAll()
 	//If file couldn't be parsed return empty slice
 	if err != nil {
 		log.Fatal("CSV file could not be parsed "+filePath, err)
-		return []Country{}, errors.New("file couldn't be parsed")
+		return []Country{}, ERRFILEPARSE
 	}
 	oldName := ""
 
@@ -62,7 +61,7 @@ func countrySearch(ISOcode string) (Country, error) {
 	countries, err := readFromCSV(CSVPATH)
 	if err != nil {
 		//No match found: return empty struct and error
-		return Country{}, errors.New("error reading from file")
+		return Country{}, err
 	}
 	for _, c := range countries {
 		//If ISO codes match: return struct
@@ -70,7 +69,7 @@ func countrySearch(ISOcode string) (Country, error) {
 			return c, nil
 		}
 	}
-	return Country{}, errors.New("no country found")
+	return Country{}, ERRCOUNTRYNOTFOUND
 }
 
 func printCountries() {

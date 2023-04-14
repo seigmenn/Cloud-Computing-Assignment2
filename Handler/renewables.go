@@ -47,14 +47,20 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 	if isocode != "" {
 		tmp, err := countrySearch(isocode)
 		if err != nil {
-			http.Error(w, "Error: "+err.Error(), http.StatusBadRequest)
-			return
+			if err == ERRFILEREAD || err == ERRFILEPARSE {
+				http.Error(w, "Error: "+err.Error(), http.StatusInternalServerError)
+				return
+			} else {
+				http.Error(w, "Error: "+err.Error(), http.StatusBadRequest)
+				return
+			}
+
 		}
 		countries = append(countries, tmp)
 	} else { //If not specified all countries are added
 		tmp, err := readFromCSV(CSVPATH)
 		if err != nil {
-			http.Error(w, "Error: "+err.Error(), http.StatusBadRequest)
+			http.Error(w, "Error: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		countries = tmp
@@ -87,6 +93,9 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 				countries = append(countries, tmp)
 			}
 		}
+	} else if neighboursPar == "true" && isocode == "" {
+		http.Error(w, "Error: can't print neighbours if no country is specified", http.StatusBadRequest)
+		return
 	}
 
 	//Remove all but the current data and adds to output slice (prettier print):
@@ -105,7 +114,7 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 		http.Error(w, "Error during pretty printing", http.StatusInternalServerError)
 		return
 	}
-	searchInfoOutput := "Number of results: " + strconv.Itoa(len(countries)) + LINEBREAK
+	searchInfoOutput := "Number of results: " + strconv.Itoa(len(outCountries)) + LINEBREAK
 	searchInfoOutput += "Found in " + Uptime(handlingTime).Round(10000000).String() + LINEBREAK
 	//writes to responseWriter
 	_, err = fmt.Fprintf(w, "%v", searchInfoOutput)
@@ -125,7 +134,6 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 	var countries []Country
 	var outCountries []CountryOut
 	var tmpCountry CountryOut
-	var count int
 
 	//Get parameters from request
 	beginTime, _ := strconv.Atoi(r.URL.Query().Get("begin"))
@@ -183,9 +191,6 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 				tmpCountry.Percentage = 0
 			}
 			outCountries = append(outCountries, tmpCountry)
-			count = len(outCountries)
-		} else {
-			count = num
 		}
 	}
 
@@ -196,7 +201,7 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 		http.Error(w, "Error during pretty printing", http.StatusInternalServerError)
 		return
 	}
-	searchInfoOutput := "Number of results: " + strconv.Itoa(count) + LINEBREAK
+	searchInfoOutput := "Number of results: " + strconv.Itoa(len(outCountries)) + LINEBREAK
 	searchInfoOutput += "Found in " + Uptime(handlingTime).Round(10000000).String() + LINEBREAK
 	//writes to responseWriter
 	_, err = fmt.Fprintf(w, "%v", searchInfoOutput)
