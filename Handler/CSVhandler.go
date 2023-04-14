@@ -2,13 +2,14 @@ package Handler
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
 )
 
-func readFromCSV(filePath string) []Country {
+func readFromCSV(filePath string) ([]Country, error) {
 	nameIndex := 0
 	ISOIndex := 1
 	yearIndex := 2
@@ -18,14 +19,14 @@ func readFromCSV(filePath string) []Country {
 	//If file couldn't be opened return empty slice
 	if err != nil {
 		log.Fatal("Couldn't read file "+filePath, err)
-		return []Country{}
+		return []Country{}, errors.New("couldn't read file")
 	}
 	csvReader := csv.NewReader(f)
 	allData, err := csvReader.ReadAll()
 	//If file couldn't be parsed return empty slice
 	if err != nil {
 		log.Fatal("CSV file could not be parsed "+filePath, err)
-		return []Country{}
+		return []Country{}, errors.New("file couldn't be parsed")
 	}
 	oldName := ""
 
@@ -54,25 +55,30 @@ func readFromCSV(filePath string) []Country {
 		oldName = newName
 	}
 	//Return slice of all read countries
-	return countries
+	return countries, nil
 }
 
-func countrySearch(ISOcode string) Country {
-	countries := readFromCSV(CSVPATH)
+func countrySearch(ISOcode string) (Country, error) {
+	countries, err := readFromCSV(CSVPATH)
+	if err != nil {
+		//No match found: return empty struct and error
+		return Country{}, errors.New("error reading from file")
+	}
 	for _, c := range countries {
 		//If ISO codes match: return struct
 		if c.ISO == ISOcode {
-			return c
+			return c, nil
 		}
 	}
-	//No match found: return empty struct
-	return Country{}
+	return Country{}, errors.New("no country found")
 }
 
 func printCountries() {
 
-	tmp := readFromCSV(CSVPATH)
-
+	tmp, err := readFromCSV(CSVPATH)
+	if err != nil {
+		fmt.Println("Error: ", err)
+	}
 	for _, c := range tmp {
 		fmt.Println(c.Name)
 		fmt.Println(c.ISO)

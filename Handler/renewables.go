@@ -42,32 +42,54 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 	var countries []Country
 	var tmpCountry CountryOut
 	var outCountries []CountryOut
-	//If country is specified, add only the last
+
+	//If country is specified search with isocode
 	if isocode != "" {
-		countries = append(countries, countrySearch(isocode))
-	} else {
-		countries = readFromCSV(CSVPATH)
+		tmp, err := countrySearch(isocode)
+		if err != nil {
+			http.Error(w, "Error: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		countries = append(countries, tmp)
+	} else { //If not specified all countries are added
+		tmp, err := readFromCSV(CSVPATH)
+		if err != nil {
+			http.Error(w, "Error: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		countries = tmp
 	}
 
-	//Get neighbouring countries data if specified
-	if neighboursPar == "true" {
-		response, err := http.Get(COUNTRIESAPIALPHA + countries[0].ISO + "?fields=borders")
+	//Get neighbouring countries data if specified and country is specified
+	if neighboursPar == "true" && isocode != "" {
+		//Get request to country api, only need borders data
+		response, err := http.Get(COUNTRIESAPIALPHA + isocode + "?fields=borders")
 		if err != nil {
 			fmt.Print(err.Error())
 		}
+		//Decode into struct:
 		countryResp := Country{}
 		decoder := json.NewDecoder(response.Body)
 		err = decoder.Decode(&countryResp)
+		//Error with decoding:
 		if err != nil {
-			http.Error(w, "Error: country: \""+countries[0].Name+"\" not found", http.StatusBadRequest)
+			http.Error(w, "Error: country: \""+isocode+"\" not found", http.StatusBadRequest)
 			return
 		}
+		//Search file for all neighbour countries and append to slice
+		//TODO: only one search with slice of country ISOs
 		for _, c := range countryResp.Borders {
-			countries = append(countries, countrySearch(c))
+			tmp, err := countrySearch(c) //countrySearch() returns empty struct if not found
+			//Only append if country struct is not empty
+			if err != nil {
+				http.Error(w, "Error: "+err.Error(), http.StatusBadRequest)
+			} else {
+				countries = append(countries, tmp)
+			}
 		}
 	}
 
-	//Remove all but the current data and adds to output slice:
+	//Remove all but the current data and adds to output slice (prettier print):
 	for _, c := range countries {
 		tmpCountry = CountryOut{}
 		tmpCountry.ISO = c.ISO
@@ -83,7 +105,7 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 		http.Error(w, "Error during pretty printing", http.StatusInternalServerError)
 		return
 	}
-	searchInfoOutput := "Number of matches: " + strconv.Itoa(len(countries)) + LINEBREAK
+	searchInfoOutput := "Number of results: " + strconv.Itoa(len(countries)) + LINEBREAK
 	searchInfoOutput += "Found in " + Uptime(handlingTime).Round(10000000).String() + LINEBREAK
 	//writes to responseWriter
 	_, err = fmt.Fprintf(w, "%v", searchInfoOutput)
@@ -103,6 +125,7 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 	var countries []Country
 	var outCountries []CountryOut
 	var tmpCountry CountryOut
+	var count int
 
 	//Get parameters from request
 	beginTime, _ := strconv.Atoi(r.URL.Query().Get("begin"))
@@ -113,12 +136,21 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 	if endTime == 0 {
 		endTime = 2023 //Default value 2023
 	}
-	//If country is specified, add only it to the slice
+	//If country is specified search with isocode
 	if isocode != "" {
-		countries = append(countries, countrySearch(isocode))
-	} else {
-		//Add all countries to slice
-		countries = readFromCSV(CSVPATH)
+		tmp, err := countrySearch(isocode)
+		if err != nil {
+			http.Error(w, "Error: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		countries = append(countries, tmp)
+	} else { //If not specified all countries are added
+		tmp, err := readFromCSV(CSVPATH)
+		if err != nil {
+			http.Error(w, "Error: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		countries = tmp
 	}
 
 	//Get average within given time slice and move to output struct
@@ -131,16 +163,30 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 			if c.Year[i] >= beginTime && c.Year[i] <= endTime {
 				sum += y //Add value to sum
 				num++    //Add number of entries that matched criteria
+				if isocode != "" {
+
+					tmpCountry.Name = c.Name
+					tmpCountry.ISO = c.ISO
+					tmpCountry.Percentage = y
+					tmpCountry.Year = c.Year[i]
+					outCountries = append(outCountries, tmpCountry)
+				}
 			}
 		}
-		tmpCountry.ISO = c.ISO
-		tmpCountry.Name = c.Name
-		if sum > 0 && num > 0 {
-			tmpCountry.Percentage = sum / float64(num) //Divide sum by number of entries in that sum
+
+		if isocode == "" {
+			tmpCountry.ISO = c.ISO
+			tmpCountry.Name = c.Name
+			if sum > 0 && num > 0 {
+				tmpCountry.Percentage = sum / float64(num) //Divide sum by number of entries in that sum
+			} else {
+				tmpCountry.Percentage = 0
+			}
+			outCountries = append(outCountries, tmpCountry)
+			count = len(outCountries)
 		} else {
-			tmpCountry.Percentage = 0
+			count = num
 		}
-		outCountries = append(outCountries, tmpCountry)
 	}
 
 	//Formats in a pretty format
@@ -150,7 +196,7 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 		http.Error(w, "Error during pretty printing", http.StatusInternalServerError)
 		return
 	}
-	searchInfoOutput := "Number of matches: " + strconv.Itoa(len(countries)) + LINEBREAK
+	searchInfoOutput := "Number of results: " + strconv.Itoa(count) + LINEBREAK
 	searchInfoOutput += "Found in " + Uptime(handlingTime).Round(10000000).String() + LINEBREAK
 	//writes to responseWriter
 	_, err = fmt.Fprintf(w, "%v", searchInfoOutput)

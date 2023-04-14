@@ -18,8 +18,8 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Prepare output returned to client
 	output := "This service offers the" +
-		"<a href=\"" + Handler.RENEWABLESPATH + "/current\"> " + Handler.RENEWABLESPATH + "/current</a> endpoint, " + Handler.LINEBREAK +
-		"<a href=\"" + Handler.RENEWABLESPATH + "/history\"> " + Handler.RENEWABLESPATH + "/history</a> endpoint, " + Handler.LINEBREAK +
+		"<a href=\"" + Handler.RENEWABLESPATH + "current\"> " + Handler.RENEWABLESPATH + "current</a> endpoint, " + Handler.LINEBREAK +
+		"<a href=\"" + Handler.RENEWABLESPATH + "history\"> " + Handler.RENEWABLESPATH + "history</a> endpoint, " + Handler.LINEBREAK +
 		"<a href=\"" + Handler.NOTIFICATIONSPATH + "\"> " + Handler.NOTIFICATIONSPATH + "</a> endpoint, " + Handler.LINEBREAK +
 		"<a href=\"" + Handler.STATUSPATH + "\"> " + Handler.STATUSPATH + "</a> endpoint, "
 
