@@ -3,7 +3,6 @@ package Handler
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"math"
 	"net/http"
 	"strconv"
@@ -127,17 +126,15 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 	if err != nil {
 		http.Error(w, "Error when returning DataOutput", http.StatusInternalServerError)
 	}
-	// Assumption: No country comes twice in the "outCountries" for Currently Percentage Renewables
-	// If so, it's a safe assumption to do as such:
+	// TO OTHER PEOPLE:
+	// This code (and other instances like it in this file) exist for counting invocations, and preforming
+	// invocational calls based on webhooks' countries, and countries mentioned in these renewables requests.
+	// If you choose to modify this, let me know.
 	for f, u := range tempWebhooks {
 		for _, y := range outCountries {
 			if u.ISO == y.ISO {
-				log.Println("DEBUG: Has detected allike ISOs (CURRENT), proceeds...")
 				tempWebhooks[f].Invocations += 1
-				if math.Mod(float64(u.Invocations), float64(u.Calls)) == 0 {
-					log.Println("The result of the following SHOULD be 0: ")
-					fmt.Println(math.Mod(float64(u.Invocations), float64(u.Calls)))
-					log.Println("DEBUG: Has detected invocation call (CURRENT), proceeds...")
+				if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
 					invocationCall(w, u)
 				}
 				break
@@ -235,23 +232,17 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 		for f, u := range tempWebhooks {
 			if u.ISO == isocode {
 				tempWebhooks[f].Invocations += 1
-				if math.Mod(float64(u.Invocations), float64(u.Calls)) == 0 {
-					log.Println("The result of the following SHOULD be 0: ")
-					fmt.Println(math.Mod(float64(u.Invocations), float64(u.Calls)))
-					log.Println("DEBUG: Has detected invocation call (HISTORY, SINGULAR ISO), proceeds...")
+				if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
 					invocationCall(w, u)
 				}
 			}
 		}
 	} else {
-		// TODO: ASSUMPTION, this assumes that all webhooks have valid isocodes
+		// TODO: ASSUMPTION, this assumes that all webhooks have valid isocodes - How can it be so sure?
 		// A valid assumption which saves performance compared to before:
 		for f, u := range tempWebhooks {
 			tempWebhooks[f].Invocations += 1
-			if math.Mod(float64(u.Invocations), float64(u.Calls)) == 0 {
-				log.Println("The result of the following SHOULD be 0: ")
-				fmt.Println(math.Mod(float64(u.Invocations), float64(u.Calls)))
-				log.Println("DEBUG: Has detected invocation call (HISTORY, ALL), proceeds...")
+			if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
 				invocationCall(w, u)
 			}
 		}
