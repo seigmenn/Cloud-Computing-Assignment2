@@ -21,3 +21,10 @@ type CountryOut struct {
 	Year       int     `json:"year,omitempty"`
 	Percentage float64 `json:"percentage"`
 }
+
+type webhookObject struct {
+	URL   string `json:"url,omitempty"`
+	ISO   string `json:"country,omitempty"`
+	Calls int    `json:"calls,omitempty"`
+	ID    string `json:"webhook_id,omitempty"`
+}
