@@ -125,7 +125,16 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 	if err != nil {
 		http.Error(w, "Error when returning DataOutput", http.StatusInternalServerError)
 	}
-
+	// Assumption: No country comes twice in the "outCountries" for Currently Percentage Renewables
+	// If so, it's a safe assumption to do as such:
+	for f, u := range tempWebhooks {
+		for _, y := range outCountries {
+			if u.ISO == y.ISO {
+				tempWebhooks[f].Invocations += 1
+				break
+			}
+		}
+	}
 }
 
 func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode string) {
@@ -211,5 +220,23 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 	_, err = fmt.Fprintf(w, "%v", string(output))
 	if err != nil {
 		http.Error(w, "Error when returning DataOutput", http.StatusInternalServerError)
+	}
+	// In the situation of a specified isocode, all webhooks with selected webhook has invocation + 1
+	if isocode != "" {
+		for f, u := range tempWebhooks {
+			if u.ISO == isocode {
+				tempWebhooks[f].Invocations += 1
+			}
+		}
+	} else {
+		// TODO: More effective solution - this is just a quickie
+		for f, u := range tempWebhooks {
+			for _, r := range countries {
+				if u.ISO == r.ISO {
+					tempWebhooks[f].Invocations += 1
+					break
+				}
+			}
+		}
 	}
 }

@@ -11,11 +11,6 @@ import (
 
 // Note; I'll clean it up when the functionality is complete.
 
-// Until Firebase gets sorted, this is the main storage for webhooks;
-// will be changed to work throughout the entire project to work for
-// invocation within renewables.go
-var tempWebhooks []webhookObject
-
 // Temporal id; will be changed later with a proper ID creation,
 // but for now, this is a temporary ID which gets incremented
 // for every new webhook to support multiple webhooks with unique IDs
@@ -77,7 +72,7 @@ func NotificationsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// replace with more efficient delete afterwards through append and slicing [:index], [index:] later
-	var temp []webhookObject
+	var temp []WebhookObject
 	for _, v := range tempWebhooks {
 		if v.ID != tempWebhooks[index].ID {
 			temp = append(temp, v)
@@ -89,14 +84,14 @@ func NotificationsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 func NotificationsPostHandler(w http.ResponseWriter, r *http.Request) {
 	temporal := strconv.Itoa(tempId)
-	newWebhook := webhookObject{ID: temporal}
+	newWebhook := WebhookObject{ID: temporal, Invocations: 1}
 	err := json.NewDecoder(r.Body).Decode(&newWebhook)
 	if err != nil {
 		http.Error(w, "Error in decoding POST request", http.StatusBadRequest)
 	}
 	w.Header().Add("content-type", "application/json")
 	encoder := json.NewEncoder(w)
-	err = encoder.Encode(webhookObject{ID: newWebhook.ID})
+	err = encoder.Encode(WebhookObject{ID: newWebhook.ID})
 	if err != nil {
 		log.Println("Attempted to return JSON of ID, failed registration.", http.StatusBadRequest)
 		fmt.Errorf("Error, has failed encoding of webhook ID, stopped registration.", err.Error())
@@ -162,4 +157,8 @@ func locateWebhookByID(id string) int {
 		}
 	}
 	return -1
+}
+
+func sendNotification(ourhook WebhookObject) {
+
 }
