@@ -1,6 +1,7 @@
 package Handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -84,7 +85,7 @@ func NotificationsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 func NotificationsPostHandler(w http.ResponseWriter, r *http.Request) {
 	temporal := strconv.Itoa(tempId)
-	newWebhook := WebhookObject{ID: temporal, Invocations: 1}
+	newWebhook := WebhookObject{ID: temporal}
 	err := json.NewDecoder(r.Body).Decode(&newWebhook)
 	if err != nil {
 		http.Error(w, "Error in decoding POST request", http.StatusBadRequest)
@@ -136,6 +137,7 @@ func NotificationsGetHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println("Attempted to return JSON of selected singular webhook, failed.")
 			fmt.Errorf("Error, has failed encoding of singular webhook", err.Error())
+			return
 		}
 		log.Println("Has successfully returned singular webhook in GET request.")
 	} else {
@@ -159,6 +161,26 @@ func locateWebhookByID(id string) int {
 	return -1
 }
 
-func sendNotification(ourhook WebhookObject) {
+// Remember, rough steps need more refining, for later
+// "He who has not tasted grapes says sour"
+func invocationCall(w http.ResponseWriter, webhook WebhookObject) {
+	// find country from isocode or something
+	response := WebhookObject{ID: webhook.ID, Calls: webhook.Calls}
+	stringified, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, "Error; Invocation Call Problem.", http.StatusBadRequest)
+		log.Println("Invocation Call Problem")
+		return
+	}
+	res, err := http.NewRequest("POST", webhook.URL, bytes.NewReader([]byte(stringified)))
+	log.Println("DEBUG: Has made POST request to URL of webhook, proceeds...")
 
+	client := http.Client{}
+	_, err = client.Do(res)
+	log.Println("DEBUG: Has done client thing, proceeds...")
+	if err != nil {
+		http.Error(w, "Error; Invocation Call Problem, HTTP Request.", http.StatusBadRequest)
+		log.Println("Invocation Call Problem")
+		return
+	}
 }

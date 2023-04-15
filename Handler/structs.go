@@ -25,16 +25,13 @@ type CountryOut struct {
 	Percentage float64 `json:"percentage"`
 }
 
+// WebhookObject Highly reusable webhookobject which can be adapted
+// to fit all goals; simply empty the values you don't want returned in JSON
 type WebhookObject struct {
 	URL         string `json:"url,omitempty"`
 	ISO         string `json:"country,omitempty"`
 	Calls       int    `json:"calls,omitempty"`
 	Invocations int    `json:"invocations,omitempty"`
 	ID          string `json:"webhook_id,omitempty"`
-}
-
-type webhookOut struct {
-	ID      string `json:"webhook_id"`
-	Country string `json:"country"`
-	Calls   int    `json:"calls"`
+	Country     string `json:"country,omitempty"`
 }
