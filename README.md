@@ -35,7 +35,7 @@ Path: /energy/v1/renewables/current/{country}?{neighbours=bool}
 The endpoint returns the latest percentage of renewables in the energy mix.
 
 This endpoint includes the parameters:<br>
-`{country}` - a 3-letter country code (optional)<br>
+`{country}` - a 3-letter country code OR complete name of a country (optional)<br>
 `{neighbours=bool}` - a bool indicating whether the values of neighbouring countries should be shown (optional)<br>
 <br>Example request with country code and neighbours:<br>
 `/energy/v1/renewables/current/nor?neighbours=true`<br>
@@ -100,6 +100,7 @@ This endpoint returns all the historical percentages of renewables in the energy
 This endpoint includes the parameters:<br>
 `{country}` - a 3-letter country code (optional)<br>
 `{begin=year&end=year}` - limit the data returned to be within these two years (optional)<br>
+`{sortByValue=bool}` - sort countries by percentage of renewable energy from highest to lowest (optional)<br>
 
 Example request with country code:<br>
 `energy/v1/renewables/history/usa`<br>
