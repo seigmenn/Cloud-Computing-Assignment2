@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -47,7 +48,8 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 	//If country is specified search with isocode
 	if isocode != "" {
 		tmp, err := countrySearch(isocode)
-		if err != nil {
+
+		if err != nil { //Error is because server couldn't read file
 			if err == ERRFILEREAD || err == ERRFILEPARSE {
 				http.Error(w, "Error: "+err.Error(), http.StatusInternalServerError)
 				return
@@ -57,7 +59,10 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 			}
 
 		}
+
 		countries = append(countries, tmp)
+	} else if isocode != "" && len(isocode) > 3 {
+
 	} else { //If not specified all countries are added
 		tmp, err := readFromCSV(CSVPATH)
 		if err != nil {
@@ -207,6 +212,12 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 			}
 			outCountries = append(outCountries, tmpCountry)
 		}
+	}
+
+	if r.URL.Query().Get("sortByValue") == "true" {
+		sort.Slice(outCountries, func(i, j int) bool {
+			return outCountries[i].Percentage > outCountries[j].Percentage
+		})
 	}
 
 	//Formats in a pretty format

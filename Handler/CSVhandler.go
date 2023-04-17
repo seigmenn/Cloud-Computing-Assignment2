@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func readFromCSV(filePath string) ([]Country, error) {
@@ -63,9 +64,10 @@ func countrySearch(ISOcode string) (Country, error) {
 		//No match found: return empty struct and error
 		return Country{}, err
 	}
+	strings.ToUpper(ISOcode)
 	for _, c := range countries {
-		//If ISO codes match: return struct
-		if c.ISO == ISOcode {
+		//If ISO codes OR name match: return struct
+		if strings.ToUpper(c.ISO) == ISOcode || strings.ToUpper(c.Name) == ISOcode {
 			return c, nil
 		}
 	}
