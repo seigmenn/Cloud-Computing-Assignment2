@@ -47,8 +47,7 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 
 	//If country is specified search with isocode
 	if isocode != "" {
-		tmp, err := countrySearch(isocode)
-
+		tmp, iso, err := countrySearch(isocode)
 		if err != nil { //Error is because server couldn't read file
 			if err == ERRFILEREAD || err == ERRFILEPARSE {
 				http.Error(w, "Error: "+err.Error(), http.StatusInternalServerError)
@@ -57,12 +56,9 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 				http.Error(w, "Error: "+err.Error(), http.StatusBadRequest)
 				return
 			}
-
 		}
-
+		isocode = iso
 		countries = append(countries, tmp)
-	} else if isocode != "" && len(isocode) > 3 {
-
 	} else { //If not specified all countries are added
 		tmp, err := readFromCSV(CSVPATH)
 		if err != nil {
@@ -88,15 +84,18 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 			http.Error(w, "Error: country: \""+isocode+"\" not found", http.StatusBadRequest)
 			return
 		}
-		//Search file for all neighbour countries and append to slice
-		//TODO: only one search with slice of country ISOs
+		var borderCountries []string
+		//Add all neighbours to search slice
 		for _, c := range countryResp.Borders {
-			tmp, err := countrySearch(c) //countrySearch() returns empty struct if not found
-			//Only append if country struct is not empty
-			if err != nil {
-				http.Error(w, "Error: "+err.Error(), http.StatusBadRequest)
-			} else {
-				countries = append(countries, tmp)
+			borderCountries = append(borderCountries, c)
+		}
+		tmp, err := countrySearchSlice(borderCountries)
+		//Only append if no errors
+		if err != nil {
+			http.Error(w, "Error: "+err.Error(), http.StatusBadRequest)
+		} else {
+			for _, c := range tmp {
+				countries = append(countries, c)
 			}
 		}
 	} else if neighboursPar == "true" && isocode == "" {
@@ -166,12 +165,13 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 	}
 	//If country is specified search with isocode
 	if isocode != "" {
-		tmp, err := countrySearch(isocode)
+		tmp, iso, err := countrySearch(isocode)
 		if err != nil {
 			http.Error(w, "Error: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 		countries = append(countries, tmp)
+		isocode = iso
 	} else { //If not specified all countries are added
 		tmp, err := readFromCSV(CSVPATH)
 		if err != nil {
@@ -241,7 +241,7 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 	// In the situation of a specified isocode, all webhooks with selected webhook has invocation + 1
 	if isocode != "" {
 		for f, u := range tempWebhooks {
-			if u.ISO == isocode {
+			if u.ISO == isocode || u.Country == isocode {
 				tempWebhooks[f].Invocations += 1
 				if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
 					invocationCall(w, u)

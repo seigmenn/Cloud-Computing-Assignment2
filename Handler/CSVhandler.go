@@ -58,20 +58,46 @@ func readFromCSV(filePath string) ([]Country, error) {
 	return countries, nil
 }
 
-func countrySearch(ISOcode string) (Country, error) {
+func countrySearch(ISOcode string) (Country, string, error) {
 	countries, err := readFromCSV(CSVPATH)
 	if err != nil {
 		//No match found: return empty struct and error
-		return Country{}, err
+		return Country{}, "", err
 	}
 	strings.ToUpper(ISOcode)
 	for _, c := range countries {
 		//If ISO codes OR name match: return struct
 		if strings.ToUpper(c.ISO) == ISOcode || strings.ToUpper(c.Name) == ISOcode {
-			return c, nil
+			return c, c.ISO, nil
 		}
 	}
-	return Country{}, ERRCOUNTRYNOTFOUND
+	return Country{}, "", ERRCOUNTRYNOTFOUND
+}
+
+func countrySearchSlice(ISOcode []string) ([]Country, error) {
+	countries, err := readFromCSV(CSVPATH)
+	returnCountries := []Country{}
+	if err != nil {
+		//No CSV data found: return empty struct and error
+		return []Country{}, err
+	}
+
+	for _, c := range countries {
+		//If ISO codes OR name match: return struct
+		for _, iso := range ISOcode {
+			strings.ToUpper(iso)
+			if strings.ToUpper(c.ISO) == iso || strings.ToUpper(c.Name) == iso {
+				returnCountries = append(returnCountries, c)
+			}
+		}
+	}
+	if len(returnCountries) == 0 {
+		//No countries matched, return empty slice and error
+		return []Country{}, ERRCOUNTRYNOTFOUND
+	} else {
+		//Found at least one country, return slice and nil
+		return returnCountries, nil
+	}
 }
 
 func printCountries() {
