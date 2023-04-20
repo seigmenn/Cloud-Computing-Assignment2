@@ -46,20 +46,20 @@ func NotificationsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	// If URL is wrong or if the supposed id is empty, checks for that
 	if len(splitURL) != 5 || splitURL[4] == "" {
 		http.Error(w, "Error; Incorrect usage of URL.", http.StatusBadRequest)
-		log.Println("Attempted to delete webhook, but failed due to improper usage of URL.")
+		log.Println("EXTERNAL ERROR: Attempted to delete webhook, but failed due to improper usage of URL.")
 		return
 	}
 	// Also checks if the length of our registered webhooks is over 0...
 	if len(tempWebhooks) <= 0 {
 		http.Error(w, "Error; No webhooks registered at all.", http.StatusNotFound)
-		log.Println("Attempted to find webhooks, but there are none registered at all.")
+		log.Println("EXTERNAL ERROR: Attempted to find webhooks, but there are none registered at all.")
 		return
 	}
 	// As well as checks if the ID an user has given this handler is valid
 	index := locateWebhookByID(splitURL[4])
 	if index == -1 {
 		http.Error(w, "Error, no webhook of such ID found.", http.StatusNotFound)
-		log.Println("Attempted to delete webhook, but failed due to nonexisting id.")
+		log.Println("EXTERNAL ERROR: Attempted to delete webhook, but failed due to nonexisting id.")
 		return
 	}
 
@@ -97,22 +97,25 @@ func NotificationsPostHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&temporaryRetrieval)
 	if err != nil {
 		// If problems, preforms error and stops
-		http.Error(w, "Error in decoding POST request", http.StatusBadRequest)
-		log.Println("INTERNAL ERROR: Cannot decode POST request. Look into problem.")
+		http.Error(w, "Error in decoding POST request.", http.StatusBadRequest)
+		log.Println("EXTERNAL ERROR: Cannot decode POST request.")
 		return
 	}
-	if temporaryRetrieval.Calls == 0 || temporaryRetrieval.URL == "" {
-		http.Error(w, "Error; Invalid input, either caused by 'calls' being 0 or 'URL' being empty.", http.StatusBadRequest)
+	if temporaryRetrieval.Calls <= 0 || temporaryRetrieval.URL == "" {
+		http.Error(w, "Error; Invalid input.", http.StatusBadRequest)
 		log.Println("EXTERNAL ERROR: User attempted to create webhook with unacceptable values, stopped registration.", http.StatusBadRequest)
 		return
 	}
 
-	test, _, _ := countrySearch(temporaryRetrieval.ISO)
-	if test.Name == "" {
-		http.Error(w, "Error; Invalid isocode registered to no country. HINT: Have you written it properly? ", http.StatusBadRequest)
-		log.Println("EXTERNAL ERROR: User attempted to create webhook with unacceptable ISOCODE, stopped registration.", http.StatusBadRequest)
-		return
+	if temporaryRetrieval.ISO != "" {
+		test, _, _ := countrySearch(temporaryRetrieval.ISO)
+		if test.Name == "" {
+			http.Error(w, "Error; Invalid isocode registered to no country. HINT: Have you written it properly? ", http.StatusBadRequest)
+			log.Println("EXTERNAL ERROR: User attempted to create webhook with unacceptable ISOCODE, stopped registration.", http.StatusBadRequest)
+			return
+		}
 	}
+
 	hash := hmac.New(sha256.New, []byte{1, 3, 1, 1})
 	_, err = hash.Write([]byte(temporaryRetrieval.URL))
 	if err != nil {

@@ -139,7 +139,7 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 	for f, u := range tempWebhooks {
 		for _, y := range outCountries {
 			fmt.Println("Comparing webhook ISO", u.ISO, " with country ISO: ", y.ISO)
-			if u.ISO == y.ISO {
+			if u.ISO == y.ISO || u.ISO == "" {
 				tempWebhooks[f].Invocations += 1
 				if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
 					countryName, _, err := countrySearch(u.ISO)
@@ -250,7 +250,7 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 	if isocode != "" {
 		for f, u := range tempWebhooks {
 			fmt.Println("Comparing ", u.ISO, " with ", isocode, "...")
-			if u.ISO == isocode {
+			if u.ISO == isocode || u.ISO == "" {
 				fmt.Println("Match between ", u.ISO, " with ", isocode, "...")
 				tempWebhooks[f].Invocations += 1
 				if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
@@ -264,13 +264,9 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 			}
 		}
 	} else {
-		// A valid assumption which saves performance compared to before:
 		for f, u := range tempWebhooks {
 			tempWebhooks[f].Invocations += 1
 			if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
-				// TODO: This line takes presidence in the matter that all ISO in webhooks are valid; this would
-				// in theory return an error and cause a problem in the program.
-				// Probably a good idea for ISOCODE Verification.
 				countryName, _, err := countrySearch(u.ISO)
 				if err != nil {
 					log.Println("Failure in retrieving country while searching for country under right invocation.")
