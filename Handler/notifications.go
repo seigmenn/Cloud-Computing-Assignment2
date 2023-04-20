@@ -183,10 +183,10 @@ func locateWebhookByID(id string) int {
 
 // Remember, rough steps need more refining, for later
 // "He who has not tasted grapes says sour"
-func invocationCall(w http.ResponseWriter, webhook WebhookObject) {
+func invocationCall(w http.ResponseWriter, webhook WebhookObject, countryName string) {
 	// TODO: ADD FUNCTIONALITY WHICH FINDS COUNTRY NAME FROM ISOCODE (or use as additional parameter from call)
 	// Generates an object with the information we want to send
-	response := WebhookObject{ID: webhook.ID, Calls: webhook.Calls}
+	response := WebhookObject{ID: webhook.ID, Calls: webhook.Calls, ISO: countryName}
 	// Marshals it in order to format it to a sendable format (in []byte later)
 	stringified, err := json.Marshal(response)
 	if err != nil {

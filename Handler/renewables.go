@@ -3,6 +3,7 @@ package Handler
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"net/http"
 	"sort"
@@ -134,12 +135,19 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 	// This code (and other instances like it in this file) exist for counting invocations, and preforming
 	// invocational calls based on webhooks' countries, and countries mentioned in these renewables requests.
 	// If you choose to modify this, let me know.
+	fmt.Println(outCountries)
 	for f, u := range tempWebhooks {
 		for _, y := range outCountries {
+			fmt.Println("Comparing webhook ISO", u.ISO, " with country ISO: ", y.ISO)
 			if u.ISO == y.ISO {
 				tempWebhooks[f].Invocations += 1
 				if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
-					invocationCall(w, u)
+					countryName, _, err := countrySearch(u.ISO)
+					if err != nil {
+						log.Println("Failure in retrieving country while searching for country under right invocation.")
+						http.Error(w, "Error in retrieving country for invocation", http.StatusInternalServerError)
+					}
+					invocationCall(w, u, countryName.Name)
 				}
 				break
 			}
@@ -241,20 +249,34 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 	// In the situation of a specified isocode, all webhooks with selected webhook has invocation + 1
 	if isocode != "" {
 		for f, u := range tempWebhooks {
-			if u.ISO == isocode || u.Country == isocode {
+			fmt.Println("Comparing ", u.ISO, " with ", isocode, "...")
+			if u.ISO == isocode {
+				fmt.Println("Match between ", u.ISO, " with ", isocode, "...")
 				tempWebhooks[f].Invocations += 1
 				if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
-					invocationCall(w, u)
+					countryName, _, err := countrySearch(u.ISO)
+					if err != nil {
+						log.Println("Failure in retrieving country while searching for country under right invocation.")
+						http.Error(w, "Error in retrieving country for invocation", http.StatusInternalServerError)
+					}
+					invocationCall(w, u, countryName.Name)
 				}
 			}
 		}
 	} else {
-		// TODO: ASSUMPTION, this assumes that all webhooks have valid isocodes - How can it be so sure?
 		// A valid assumption which saves performance compared to before:
 		for f, u := range tempWebhooks {
 			tempWebhooks[f].Invocations += 1
 			if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
-				invocationCall(w, u)
+				// TODO: This line takes presidence in the matter that all ISO in webhooks are valid; this would
+				// in theory return an error and cause a problem in the program.
+				// Probably a good idea for ISOCODE Verification.
+				countryName, _, err := countrySearch(u.ISO)
+				if err != nil {
+					log.Println("Failure in retrieving country while searching for country under right invocation.")
+					http.Error(w, "Error in retrieving country for invocation", http.StatusInternalServerError)
+				}
+				invocationCall(w, u, countryName.Name)
 			}
 		}
 	}

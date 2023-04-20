@@ -33,5 +33,4 @@ type WebhookObject struct {
 	Calls       int    `json:"calls,omitempty"`
 	Invocations int    `json:"invocations,omitempty"`
 	ID          string `json:"webhook_id,omitempty"`
-	Country     string `json:"country,omitempty"`
 }
