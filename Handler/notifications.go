@@ -99,6 +99,13 @@ func NotificationsPostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error in decoding POST request", http.StatusBadRequest)
 		return
 	}
+	test, _, _ := countrySearch(newWebhook.ISO)
+	if test.Name == "" {
+		http.Error(w, "Error; Invalid isocode registered to no country. HINT: Have you written it properly? ", http.StatusBadRequest)
+		log.Println("User attempted to create webhook with unacceptable ISOCODE, stopped registration.", http.StatusBadRequest)
+		return
+	}
+
 	// Adds to content-type and encoder to JSON
 	w.Header().Add("content-type", "application/json")
 	encoder := json.NewEncoder(w)
@@ -108,6 +115,7 @@ func NotificationsPostHandler(w http.ResponseWriter, r *http.Request) {
 		// Checks related errors
 		log.Println("Attempted to return JSON of ID, failed registration.", http.StatusBadRequest)
 		fmt.Errorf("Error, has failed encoding of webhook ID, stopped registration.", err.Error())
+		return
 	}
 	// If no errors, then append safely to local storage of webhooks
 	tempWebhooks = append(tempWebhooks, newWebhook)
@@ -184,7 +192,6 @@ func locateWebhookByID(id string) int {
 // Remember, rough steps need more refining, for later
 // "He who has not tasted grapes says sour"
 func invocationCall(w http.ResponseWriter, webhook WebhookObject, countryName string) {
-	// TODO: ADD FUNCTIONALITY WHICH FINDS COUNTRY NAME FROM ISOCODE (or use as additional parameter from call)
 	// Generates an object with the information we want to send
 	response := WebhookObject{ID: webhook.ID, Calls: webhook.Calls, ISO: countryName}
 	// Marshals it in order to format it to a sendable format (in []byte later)
