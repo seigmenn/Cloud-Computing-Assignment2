@@ -153,7 +153,7 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 						returnName = countryName.Name
 					}
 					// Proceeds to invocation call in invocationCall, refer to notifications.go
-					invocationCall(w, u, returnName)
+					invocationCall(w, tempWebhooks[f], returnName)
 				}
 				// As every webhook can only be associated with one isocode, when the isocode is found,
 				// relieves performance and saves computer time by breaking the second for loop to proceed
@@ -279,7 +279,7 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 						returnName = countryName.Name
 					}
 					// Proceeds to invocation call in invocationCall, refer to notifications.go
-					invocationCall(w, u, returnName)
+					invocationCall(w, tempWebhooks[f], returnName)
 				}
 			}
 		}
@@ -303,7 +303,7 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 					returnName = countryName.Name
 				}
 				// Proceeds to invocation call in invocationCall, refer to notifications.go
-				invocationCall(w, u, returnName)
+				invocationCall(w, tempWebhooks[f], returnName)
 			}
 		}
 	}
