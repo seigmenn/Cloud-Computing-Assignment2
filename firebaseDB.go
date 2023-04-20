@@ -1,16 +1,18 @@
 package main
 
 import (
-	"context"
-	"log"
-
-	firebase "firebase.google.com/go"
+	"cloud.google.com/go/firestore"   // Firestore-specific support
+	"context"                         // State handling across API boundaries; part of native GoLang API
+	firebase "firebase.google.com/go" // Generic firebase support
 	"google.golang.org/api/option"
+	"log"
 )
 
-func main() {
+var ctx context.Context
+var client *firestore.Client
+
+func firebasemain() {
 	// Use a service account
-	ctx := context.Background()
 	sa := option.WithCredentialsFile("./group12-service-account.json")
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
@@ -25,18 +27,6 @@ func main() {
 }
 
 /***
-import (
-	"cloud.google.com/go/firestore" // Firestore-specific support
-	"context"                       // State handling across API boundaries; part of native GoLang API
-	"google.golang.org/api/option"
-	"log"
-	"net/http"
-	"os"
-)
-
-// Firebase context and client used by Firestore functions throughout the program.
-var ctx context.Context
-var client *firestore.Client
 
 func firebase() {
 	// Firebase initialisation
