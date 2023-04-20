@@ -2,11 +2,13 @@ package Handler
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -89,28 +91,42 @@ func NotificationsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 
 func NotificationsPostHandler(w http.ResponseWriter, r *http.Request) {
 	// Converts temporal ID of numbers to a string, gets removed later with addition of proper ID
-	temporal := strconv.Itoa(tempId)
 	// Creates a new webhook object with an already assigned ID automatically generated
-	newWebhook := WebhookObject{ID: temporal}
+	temporaryRetrieval := WebhookObject{}
 	// Decodes the information from the body of request to object
-	err := json.NewDecoder(r.Body).Decode(&newWebhook)
+	err := json.NewDecoder(r.Body).Decode(&temporaryRetrieval)
 	if err != nil {
 		// If problems, preforms error and stops
 		http.Error(w, "Error in decoding POST request", http.StatusBadRequest)
+		log.Println("INTERNAL ERROR: Cannot decode POST request. Look into problem.")
 		return
 	}
-	test, _, _ := countrySearch(newWebhook.ISO)
+	if temporaryRetrieval.Calls == 0 || temporaryRetrieval.URL == "" {
+		http.Error(w, "Error; Invalid input, either caused by 'calls' being 0 or 'URL' being empty.", http.StatusBadRequest)
+		log.Println("EXTERNAL ERROR: User attempted to create webhook with unacceptable values, stopped registration.", http.StatusBadRequest)
+		return
+	}
+
+	test, _, _ := countrySearch(temporaryRetrieval.ISO)
 	if test.Name == "" {
 		http.Error(w, "Error; Invalid isocode registered to no country. HINT: Have you written it properly? ", http.StatusBadRequest)
-		log.Println("User attempted to create webhook with unacceptable ISOCODE, stopped registration.", http.StatusBadRequest)
+		log.Println("EXTERNAL ERROR: User attempted to create webhook with unacceptable ISOCODE, stopped registration.", http.StatusBadRequest)
 		return
 	}
+	hash := hmac.New(sha256.New, []byte{1, 3, 1, 1})
+	_, err = hash.Write([]byte(temporaryRetrieval.URL))
+	if err != nil {
+		http.Error(w, "Error; Cannot generate HASH from URL.", http.StatusInternalServerError)
+		log.Println("INTERNAL ERROR: Cannot generate hash. Look into problem.")
+	}
+
+	temporaryRetrieval.ID = hex.EncodeToString(hash.Sum(nil))
 
 	// Adds to content-type and encoder to JSON
 	w.Header().Add("content-type", "application/json")
 	encoder := json.NewEncoder(w)
 	// Creates a new webhook with automatically generated ID
-	err = encoder.Encode(WebhookObject{ID: newWebhook.ID})
+	err = encoder.Encode(WebhookObject{ID: temporaryRetrieval.ID})
 	if err != nil {
 		// Checks related errors
 		log.Println("Attempted to return JSON of ID, failed registration.", http.StatusBadRequest)
@@ -118,7 +134,7 @@ func NotificationsPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// If no errors, then append safely to local storage of webhooks
-	tempWebhooks = append(tempWebhooks, newWebhook)
+	tempWebhooks = append(tempWebhooks, temporaryRetrieval)
 	w.WriteHeader(http.StatusCreated)
 	log.Println("Has successfully registered webhook to storage.")
 	tempId += 1
