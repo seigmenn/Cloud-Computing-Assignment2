@@ -207,57 +207,131 @@ Found in 0s
 
 
 ## Webhook<br>
+
 ### Registration of webhook
+
+Users, through the usage of the `/energy/v1/notifications/` endpoint, have the ability to do a number of actions regarding webhooks, such as the matter of registration. To register a webhook, the endpoint requires a `HTTP POST` request, with a body containing two/three values:
+
+- `URL`; string - the URL the service hooks onto, and sends a request when invocation triggers.
+- `CALLS`: integer - the amount of events that has to happen per before an invocation triggers (calls = 5 will return an invocation for every 5*n calls (5, 10, 15, ...)).
+- `COUNTRY`: optional string - a three-letter long isocode which represents a country a webhook will be hooked onto. This is an optional value, and not including it will make the webhook apply for all countries.
+
+Given a successful registration, the service will return a `application/json` of the webhook's ID, generated from hashing the URL of the hooked site. It is recommended that this ID gets saved for further usage of the program.
+
+#### Request Example
+
 ```
 Method: POST
 Path: /energy/v1/notifications/
 ```
-
-This endpoints allows users to register webhooks that are triggered when a specified event is invoked. It is also possible to specify the number of invocations needed before a notification is triggered (i.e if the number is specified as 5, a notification will be called after 5,10,15 ... invocations)
-
-Example message:
+```
+{
+    "url": "localhost:8080/client/",
+    "calls": 5,
+    "country": "NOR"
+}
 ```
 
+#### Response Example
+```
+{
+	"webhook_id": "8d5f66188edc3dd36776c02ec61632edcb677251939e002a0735204ffc25976e"
+}
 ```
 
 ### Deletion of webhook
+
+Users can also choose to delete registered webhooks, given they have the ID of a webhook they would want to delete. To do so, the user first goes to the endpoint of `/energy/v1/notifications/{id}`, where "id" is their webhook id. To this URL, the user sends a `HTTP DELETE` request, which will either return a `text/html` message of success (deleting the webhook), or an `error` (not deleting any webhooks). 
+
+#### Request Example
+
 ```
 Method: DELETE
 Path: /energy/v1/notifications/{id}
 ```
 
-This endpoint deletes the webhook with the id `{id}`. <br>
-Example message:
+#### Response Example
+
+Successful response:
+```
+You are now deleting the following information:
+Identification: {id}
+URL: (webhook.URL)
+In which it was focued to look at the country of (webhook.ISO) and report a notification every (webhook.Calls) invocations.
 ```
 
-```
-
-Example response:
-```
-```
 
 ### View registered webhook
+
+Users can also read informaiton about all registered webhooks, either specifically mentioned ones through the usages of webhook_id, or all that are registered in the program.
+To retrieve information about all webhooks, the user has to send a `HTTP GET` request to endpoint of `/energy/v1/notifications/`. To retrieve information about a specific one, the user has to add the ID of the webhook to the endpoint previously mentioned, and perform a `HTTP GET` request to that; `/energy/v1/notifications/{id}`.
+
+The information retrieved is in the form of `application/json`, containing a webhook's URL, Calls and 
+
+#### Example Requests
+
+Retrieve information about all webhooks:
+
+```
+Method: GET
+Path: /energy/v1/notifications/
+```
+
+Retrieve information about one specific webhook by ID:
+
 ```
 Method: GET
 Path: /energy/v1/notifications/{id}
 ```
-This endpoint allows a user to view registered webhooks. If an id is specified it will only return that webhook, but if no id is specified it will return all registered endpoints. <br>
 
-Example message with an id:
+#### Example Responses
+
+Retrieve information about all webhooks:
 ```
+[
+    {
+        "url": "https://localhost:8080/client/",
+        "country": "NOR",
+        "calls": 5,
+        "webhook_id": "8d5f66188edc3dd36776c02ec61632edcb677251939e002a0735204ffc25976e"
+    },
+    {
+        "url": "https://localhost:8080/client/",
+        "country": "NOR",
+        "calls": 10,
+        "webhook_id": "1ec08701e65b7a91c7b34e06f9bcefe5e22b7657b9fd6fa0acff5f189f9811a1"
+    }, ... 
+]
 ```
 
-Example response:
+Retrieve information about one specific webhook:
 ```
+{
+    "url": "https://localhost:8080/client/",
+    "country": "NOR",
+    "calls": 5,
+    "webhook_id": "1ec08701e65b7a91c7b34e06f9bcefe5e22b7657b9fd6fa0acff5f189f9811a1"
+}
 ```
 
-Example message without id:
+### Webhook Invocation
+
+When a webhook has been triggered, it will send a `HTTP POST` request to the specified URL belonging to the webhook - this request will then contain in the form of `application/json`; the webhook's ID, the full name of the country the webhook is registered to, and the amount of calls that the webhook has had up til that moment.
+
+#### Example Response
 ```
+Method: POST
+Path: webhook.URL
 ```
 
-Example response:
 ```
+{
+	"webhook_id": "1ec08701e65b7a91c7b34e06f9bcefe5e22b7657b9fd6fa0acff5f189f9811a1",
+	"country": "Norway",
+	"calls": 10
+}
 ```
+
 
 ## Status endpoint<br>
 ```
