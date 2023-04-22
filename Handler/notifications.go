@@ -2,6 +2,7 @@ package Handler
 
 import (
 	"bytes"
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
@@ -43,6 +44,8 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
 func NotificationsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	splitURL := strings.Split(r.URL.Path, "/")
+	returnData := returnWebhooks(w, r)
+
 	// If URL is wrong or if the supposed id is empty, checks for that
 	if len(splitURL) != 5 || splitURL[4] == "" {
 		http.Error(w, "Error; Incorrect usage of URL.", http.StatusBadRequest)
@@ -50,41 +53,39 @@ func NotificationsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Also checks if the length of our registered webhooks is over 0...
-	if len(tempWebhooks) <= 0 {
+	if len(returnData) <= 0 {
 		http.Error(w, "Error; No webhooks registered at all.", http.StatusNotFound)
 		log.Println("EXTERNAL ERROR: Attempted to find webhooks, but there are none registered at all.")
 		return
 	}
-	// As well as checks if the ID an user has given this handler is valid
-	index := locateWebhookByID(splitURL[4])
-	if index == -1 {
-		http.Error(w, "Error, no webhook of such ID found.", http.StatusNotFound)
-		log.Println("EXTERNAL ERROR: Attempted to delete webhook, but failed due to nonexisting id.")
-		return
-	}
 
-	// If everything is valid, creates HTML text which explains the contents of
-	// the webhook about to be deleted
-	w.Header().Add("content-type", "text/html")
-	output := "You are now deleting the webhook with the following information: <br>"
-	output += "Identification: " + tempWebhooks[index].ID + "<br>"
-	output += "URL: " + tempWebhooks[index].URL + "<br>"
-	output += "In which it was focused to look at the country of" + tempWebhooks[index].ISO + ", and report a " +
-		"notification every " + string(tempWebhooks[index].Calls) + " invocations."
-	_, err := fmt.Fprintf(w, "%v", output)
-	if err != nil {
-		http.Error(w, "Error when returning output,", http.StatusInternalServerError)
-	}
+	//Uses deleteDocument to try to delete the webhook document via the
+	ctx := context.Background()
+	err := deleteDocument(w, ctx, splitURL[4])
+	if err == nil {
 
-	// Proceeds to update local storage of webhooks to not contain this deleted webhook
-	// replace with more efficient delete afterwards through append and slicing [:index], [index:] later
-	var temp []WebhookObject
-	for _, v := range tempWebhooks {
-		if v.ID != tempWebhooks[index].ID {
-			temp = append(temp, v)
+		// As well as checks if the ID a user has given this handler is valid
+		index := locateWebhookByID(splitURL[4], returnData)
+		if index == -1 {
+			http.Error(w, "Error, no webhook of such ID found.", http.StatusNotFound)
+			log.Println("EXTERNAL ERROR: Attempted to delete webhook, but failed due to nonexisting id.")
+			return
+		}
+
+		// If everything is valid, creates HTML text which explains the contents of
+		// the webhook about to be deleted
+		w.Header().Add("content-type", "text/html")
+		output := "You are now deleting the webhook with the following information: <br>"
+		output += "Identification: " + returnData[index].ID + "<br>"
+		output += "URL: " + returnData[index].URL + "<br>"
+		output += "In which it was focused to look at the country of" + tempWebhooks[index].ISO + ", and report a " +
+			"notification every " + string(returnData[index].Calls) + " invocations."
+		_, err := fmt.Fprintf(w, "%v", output)
+		if err != nil {
+			http.Error(w, "Error when returning output,", http.StatusInternalServerError)
 		}
 	}
-	tempWebhooks = temp
+
 	w.WriteHeader(http.StatusNoContent)
 
 }
@@ -136,7 +137,8 @@ func NotificationsPostHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Errorf("Error, has failed encoding of webhook ID, stopped registration.", err.Error())
 		return
 	}
-	// If no errors, then append safely to local storage of webhooks
+	// If no errors, then append safely to firebase webhook
+	addDocument(w, r, temporaryRetrieval)
 	tempWebhooks = append(tempWebhooks, temporaryRetrieval)
 	w.WriteHeader(http.StatusCreated)
 	log.Println("Has successfully registered webhook to storage.")
@@ -146,19 +148,21 @@ func NotificationsPostHandler(w http.ResponseWriter, r *http.Request) {
 
 func NotificationsGetHandler(w http.ResponseWriter, r *http.Request) {
 	splitURL := strings.Split(r.URL.Path, "/")
+	returnData := returnWebhooks(w, r)
+
 	if len(splitURL) != 5 {
 		http.Error(w, "Error; Incorrect usage of URL.", http.StatusBadRequest)
 		log.Println("Attempted to get webhook, but failed due to improper usage of URL.")
 		return
 	}
-	if len(tempWebhooks) <= 0 {
+	if len(returnData) <= 0 {
 		http.Error(w, "Error; No webhooks registered at all.", http.StatusNotFound)
 		log.Println("Attempted to find webhooks, but there are none registered at all.")
 		return
 	}
 
 	var temp []WebhookObject
-	for _, v := range tempWebhooks {
+	for _, v := range returnData {
 		obj := WebhookObject{URL: v.URL, ID: v.ID, Calls: v.Calls}
 		temp = append(temp, obj)
 	}
@@ -166,7 +170,7 @@ func NotificationsGetHandler(w http.ResponseWriter, r *http.Request) {
 	if splitURL[4] == "" {
 		w.Header().Add("content-type", "application/json")
 		encoder := json.NewEncoder(w)
-		err := encoder.Encode(temp)
+		err := encoder.Encode(returnData)
 		if err != nil {
 			log.Println("Attempted to return JSON of all registered webhooks, failed.")
 			fmt.Errorf("Error, has failed encoding of all webhooks registered", err.Error())
@@ -175,9 +179,9 @@ func NotificationsGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	index := locateWebhookByID(splitURL[4])
+	index := locateWebhookByID(splitURL[4], returnData)
 	if index != -1 {
-		selectedWebhook := temp[index]
+		selectedWebhook := returnData[index]
 		w.Header().Add("content-type", "application/json")
 		encoder := json.NewEncoder(w)
 		err := encoder.Encode(selectedWebhook)
@@ -199,8 +203,8 @@ func NotificationsGetHandler(w http.ResponseWriter, r *http.Request) {
 // NB: This will probably change as we change it to Firebase, I just want the things
 // sorted out locally for now
 // If it doesn't find it, it returns a -1, impossible index
-func locateWebhookByID(id string) int {
-	for i, v := range tempWebhooks {
+func locateWebhookByID(id string, data []WebhookObject) int {
+	for i, v := range data {
 		if v.ID == id {
 			return i
 		}

@@ -42,6 +42,7 @@ func main() {
 		log.Println("$PORT has not been set. Default: 8080")
 		port = "8080"
 	}
+	Handler.Firebasemain()
 	//Test of CSV reading function
 	//printCountries()
 
