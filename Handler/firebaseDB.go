@@ -11,18 +11,15 @@ import (
 	"net/http"
 )
 
+// Variables used throughout the program
 var ctx context.Context
 var client *firestore.Client
 
 /*
 Reads string from the body and sends it to Firestore so it can be registered as a document
-It's going to send 1 int and 3 strings.
 */
 func addDocument(w http.ResponseWriter, r *http.Request, webhookInfo WebhookObject) {
-	// Add element in embedded structure.
-	// Note: this structure is defined by the client, not the server!; it exemplifies the use of a complex structure
-	// and illustrates how you can use Firestore features such as Firestore timestamps.
-
+	// Add element in embedded structure. Adds the info by using the WebhookObject struct
 	id, _, err := client.Collection(COLLECTION).Add(ctx,
 		map[string]interface{}{
 			"webhook_id":  webhookInfo.ID,
@@ -33,7 +30,7 @@ func addDocument(w http.ResponseWriter, r *http.Request, webhookInfo WebhookObje
 		})
 
 	if err != nil {
-		// Error handling
+		// Error handling prints to the terminal and postman console
 		log.Println("Error when adding document " + webhookInfo.ID + ", Error: " + err.Error())
 		http.Error(w, "Error when adding document "+webhookInfo.ID+", Error: "+err.Error(), http.StatusBadRequest)
 		return
@@ -47,7 +44,7 @@ func addDocument(w http.ResponseWriter, r *http.Request, webhookInfo WebhookObje
 }
 
 /*
-Returns all the documents as well as their info
+Returns all the documents as well as the information in the documents
 */
 func returnWebhooks(w http.ResponseWriter, r *http.Request) []WebhookObject {
 	// Collective retrieval of messages
@@ -83,39 +80,18 @@ func returnWebhooks(w http.ResponseWriter, r *http.Request) []WebhookObject {
 }
 
 /*
-**
-/*
-Handler for all message-related operations
-
-	func handleMessage(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			addDocument(w, r)
-		case http.MethodGet:
-			displayDocument(w, r)
-		default:
-			log.Println("Unsupported request method " + r.Method)
-			http.Error(w, "Unsupported request method "+r.Method, http.StatusMethodNotAllowed)
-			return
-		}
-	}
-
-**
-*/
-
-/*
 Function that returns firebase app client by taking in a context.Context
 parameter and returns a tuple to the pointer to firebase.App and error object
 */
-
 func GetFirebaseClient(ctx context.Context) (*firebase.App, error) {
 	// Initialize a Firebase app using a service account file
 	sa := option.WithCredentialsFile("group12-assignment2-sa.json")
 
+	//Creates a new Firebase app instance with the given information and the service account
 	app, err := firebase.NewApp(ctx, nil, sa)
+	//Error handling
 	if err != nil {
-		log.Fatalf("error initializing app: %v\n", err)
-		return nil, err
+		log.Println("Error initializing app: ", err.Error())
 	}
 
 	return app, nil
@@ -167,6 +143,9 @@ func deleteDocument(w http.ResponseWriter, ctx context.Context, keyID string) er
 	return nil
 }
 
+/*
+Firebase main connects the program to the firebase database
+*/
 func Firebasemain() {
 	// Initialize a Firebase app using a service account file
 	ctx = context.Background()
@@ -191,5 +170,4 @@ func Firebasemain() {
 	if client == nil {
 		log.Fatalf("client is nil")
 	}
-
 }

@@ -171,6 +171,7 @@ func NotificationsGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
 	var temp []WebhookObject
 	for _, v := range returnData {
 		obj := WebhookObject{ID: v.ID, URL: v.URL, Calls: v.Calls, ISO: v.ISO, Invocations: v.Invocations}
