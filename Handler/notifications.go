@@ -13,14 +13,6 @@ import (
 	"strings"
 )
 
-// Note; I'll clean it up when the functionality is complete.
-
-// Temporal id; will be changed later with a proper ID creation,
-// but for now, this is a temporary ID which gets incremented
-// for every new webhook to support multiple webhooks with unique IDs
-// to demonstrate requests with specified ID
-var tempId = 0
-
 func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodDelete:
@@ -41,6 +33,17 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+/*
+	func NotificationsDeleteHandler(...)
+
+	Given a specific webhook through ID in URL, will attempt to delete the webhook from
+	current local storage of webhooks if one of specified ID is found - else, send error.
+
+	REQUEST:
+		HTTP METHOD: DELETE
+		Path: /energy/v1/notifications/(specified ID for deletion)
+*/
 
 func NotificationsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	splitURL := strings.Split(r.URL.Path, "/")
@@ -86,10 +89,18 @@ func NotificationsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Sends a "no content" status code to specify that there is no content
+	// of specified ID left, thus a successful deletion
 	w.WriteHeader(http.StatusNoContent)
 
 }
 
+/*
+func NotificationsPostHandler(...)
+
+Given a POST request with body of valid information, will create a webhook
+with specifications of said information - else, will send errors.
+*/
 func NotificationsPostHandler(w http.ResponseWriter, r *http.Request) {
 	// Converts temporal ID of numbers to a string, gets removed later with addition of proper ID
 	// Creates a new webhook object with an already assigned ID automatically generated
@@ -142,7 +153,6 @@ func NotificationsPostHandler(w http.ResponseWriter, r *http.Request) {
 	tempWebhooks = append(tempWebhooks, temporaryRetrieval)
 	w.WriteHeader(http.StatusCreated)
 	log.Println("Has successfully registered webhook to storage.")
-	tempId += 1
 
 }
 
@@ -163,7 +173,7 @@ func NotificationsGetHandler(w http.ResponseWriter, r *http.Request) {
 
 	var temp []WebhookObject
 	for _, v := range returnData {
-		obj := WebhookObject{URL: v.URL, ID: v.ID, Calls: v.Calls}
+		obj := WebhookObject{ID: v.ID, URL: v.URL, Calls: v.Calls, ISO: v.ISO, Invocations: v.Invocations}
 		temp = append(temp, obj)
 	}
 
@@ -212,11 +222,12 @@ func locateWebhookByID(id string, data []WebhookObject) int {
 	return -1
 }
 
-// Remember, rough steps need more refining, for later
-// "He who has not tasted grapes says sour"
+/*
+Function to invoke webhooks
+*/
 func invocationCall(w http.ResponseWriter, webhook WebhookObject, countryName string) {
 	// Generates an object with the information we want to send
-	response := WebhookObject{ID: webhook.ID, Calls: webhook.Calls, ISO: countryName}
+	response := WebhookObject{ID: webhook.ID, Calls: webhook.Invocations, ISO: countryName}
 	// Marshals it in order to format it to a sendable format (in []byte later)
 	stringified, err := json.Marshal(response)
 	if err != nil {

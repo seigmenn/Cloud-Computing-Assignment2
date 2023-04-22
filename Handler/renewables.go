@@ -131,24 +131,33 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 	if err != nil {
 		http.Error(w, "Error when returning DataOutput", http.StatusInternalServerError)
 	}
-	// TO OTHER PEOPLE:
-	// This code (and other instances like it in this file) exist for counting invocations, and preforming
-	// invocational calls based on webhooks' countries, and countries mentioned in these renewables requests.
-	// If you choose to modify this, let me know.
-	fmt.Println(outCountries)
+	// WEBHOOK INTERACTION:
+
+	// As current can return either one, all, or multiple specified countries, it has to go through
+	// every webhook with every country produced
 	for f, u := range tempWebhooks {
 		for _, y := range outCountries {
-			fmt.Println("Comparing webhook ISO", u.ISO, " with country ISO: ", y.ISO)
+			// Checks if a webhook's isocode is either empty or matching with one country's
 			if u.ISO == y.ISO || u.ISO == "" {
+				// If it does, increment invocation counter and check if invocation call can be made
 				tempWebhooks[f].Invocations += 1
 				if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
-					countryName, _, err := countrySearch(u.ISO)
-					if err != nil {
-						log.Println("Failure in retrieving country while searching for country under right invocation.")
-						http.Error(w, "Error in retrieving country for invocation", http.StatusInternalServerError)
+					// If so, attempts to retrieve the country (or just "" in case of no iso specified)
+					returnName := ""
+					if u.ISO != "" {
+						countryName, _, err := countrySearch(u.ISO)
+						if err != nil {
+							log.Println("Failure in retrieving country while searching for country under right invocation.")
+							http.Error(w, "Error in retrieving country for invocation", http.StatusInternalServerError)
+						}
+						returnName = countryName.Name
 					}
-					invocationCall(w, u, countryName.Name)
+					// Proceeds to invocation call in invocationCall, refer to notifications.go
+					invocationCall(w, tempWebhooks[f], returnName)
 				}
+				// As every webhook can only be associated with one isocode, when the isocode is found,
+				// relieves performance and saves computer time by breaking the second for loop to proceed
+				// to next iteration of forloop through all webhooks
 				break
 			}
 		}
@@ -246,33 +255,55 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 	if err != nil {
 		http.Error(w, "Error when returning DataOutput", http.StatusInternalServerError)
 	}
-	// In the situation of a specified isocode, all webhooks with selected webhook has invocation + 1
+	// WEBHOOK INTERACTION:
+	// Checks if isocode generated is empty or not;
 	if isocode != "" {
+		// if not, compare every webhook with this isocode
 		for f, u := range tempWebhooks {
-			fmt.Println("Comparing ", u.ISO, " with ", isocode, "...")
+			// If the webhook's ISO is allike to the isocode or empty
 			if u.ISO == isocode || u.ISO == "" {
-				fmt.Println("Match between ", u.ISO, " with ", isocode, "...")
+				// If it is, then chance of invocation - goes forth here
+
+				// Increments total invocations of webhook
 				tempWebhooks[f].Invocations += 1
+				// Checks if the amount of invocations modulates with specified amount of calls
 				if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
+					// If so, attempts to retrieve the country (or just "" in case of no iso specified)
+					returnName := ""
+					if u.ISO != "" {
+						countryName, _, err := countrySearch(u.ISO)
+						if err != nil {
+							log.Println("Failure in retrieving country while searching for country under right invocation.")
+							http.Error(w, "Error in retrieving country for invocation", http.StatusInternalServerError)
+						}
+						returnName = countryName.Name
+					}
+					// Proceeds to invocation call in invocationCall, refer to notifications.go
+					invocationCall(w, tempWebhooks[f], returnName)
+				}
+			}
+		}
+		// However, if there is no isocode specified / ergo, all countries are shown
+		// Because all webhooks are guaranteed to be associated with one country through ISOcode verification
+		// made during the creation of them, a simplified process would be to just increment
+		// every webhook's invocation counter with 1
+	} else {
+		for f, u := range tempWebhooks {
+			// Increments invocation counter and checks if an invocation call can be made
+			tempWebhooks[f].Invocations += 1
+			if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
+				// If so, attempts to retrieve the country (or just "" in case of no iso specified)
+				returnName := ""
+				if u.ISO != "" {
 					countryName, _, err := countrySearch(u.ISO)
 					if err != nil {
 						log.Println("Failure in retrieving country while searching for country under right invocation.")
 						http.Error(w, "Error in retrieving country for invocation", http.StatusInternalServerError)
 					}
-					invocationCall(w, u, countryName.Name)
+					returnName = countryName.Name
 				}
-			}
-		}
-	} else {
-		for f, u := range tempWebhooks {
-			tempWebhooks[f].Invocations += 1
-			if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
-				countryName, _, err := countrySearch(u.ISO)
-				if err != nil {
-					log.Println("Failure in retrieving country while searching for country under right invocation.")
-					http.Error(w, "Error in retrieving country for invocation", http.StatusInternalServerError)
-				}
-				invocationCall(w, u, countryName.Name)
+				// Proceeds to invocation call in invocationCall, refer to notifications.go
+				invocationCall(w, tempWebhooks[f], returnName)
 			}
 		}
 	}
