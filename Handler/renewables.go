@@ -45,6 +45,7 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 	var countries []Country
 	var tmpCountry CountryOut
 	var outCountries []CountryOut
+	returnData := returnWebhooks(w, r)
 
 	//If country is specified search with isocode
 	if isocode != "" {
@@ -135,13 +136,13 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 
 	// As current can return either one, all, or multiple specified countries, it has to go through
 	// every webhook with every country produced
-	for f, u := range tempWebhooks {
+	for f, u := range returnData {
 		for _, y := range outCountries {
 			// Checks if a webhook's isocode is either empty or matching with one country's
 			if u.ISO == y.ISO || u.ISO == "" {
-				// If it does, increment invocation counter and check if invocation call can be made
-				tempWebhooks[f].Invocations += 1
-				if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
+				// If it does, calls function invocationUpdate and increment invocation counter and check if invocation call can be made
+				invocationUpdate(w, u)
+				if math.Mod(float64(returnData[f].Invocations+1), float64(u.Calls)) == 0 {
 					// If so, attempts to retrieve the country (or just "" in case of no iso specified)
 					returnName := ""
 					if u.ISO != "" {
@@ -153,7 +154,7 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 						returnName = countryName.Name
 					}
 					// Proceeds to invocation call in invocationCall, refer to notifications.go
-					invocationCall(w, tempWebhooks[f], returnName)
+					invocationCall(w, returnData[f], returnName)
 				}
 				// As every webhook can only be associated with one isocode, when the isocode is found,
 				// relieves performance and saves computer time by breaking the second for loop to proceed

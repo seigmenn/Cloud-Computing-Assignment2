@@ -144,6 +144,45 @@ func deleteDocument(w http.ResponseWriter, ctx context.Context, keyID string) er
 }
 
 /*
+Function that updates the number of invocations on the document in the Firebase-collection
+*/
+func invocationUpdate(w http.ResponseWriter, webhook WebhookObject) {
+	//Get Firebase client using the service account provided from GetFirebaseClient
+	client, err := GetFirebaseClient(ctx)
+	if err != nil {
+		log.Println("Error getting the Firebase client: ", err.Error())
+	}
+
+	//Get the Firestore client so we can interact with the database
+	fsClient, err := client.Firestore(ctx)
+	if err != nil {
+		log.Println("Error getting Firestore client: ", err.Error())
+	}
+	//Finds webhook with key sent from parameter
+	webhookKeyID := fsClient.Collection(COLLECTION).Where("webhook_id", "==", webhook.ID)
+
+	//Gets data from the query above
+	data, err := webhookKeyID.Documents(ctx).GetAll()
+	if err != nil {
+		log.Println("Error getting the data", err.Error())
+	}
+	//Saves the data reference from the data variable above in a new variable
+	documentRef := data[0].Ref
+
+	//Updates the invocations value in the document by using a Set-function
+	_, err = documentRef.Set(ctx,
+		map[string]interface{}{
+			"invocations": webhook.Invocations + 1,
+			//MergeAll-function that overwrites the info in the document with the updated one
+		}, firestore.MergeAll)
+	//Error handling
+	if err != nil {
+		log.Println("Error updating document: ", err.Error())
+		http.Error(w, "Error updating document: ", http.StatusInternalServerError)
+	}
+}
+
+/*
 Firebase main connects the program to the firebase database
 */
 func Firebasemain() {
