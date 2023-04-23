@@ -18,7 +18,7 @@ var client *firestore.Client
 /*
 Reads string from the body and sends it to Firestore so it can be registered as a document
 */
-func addDocument(w http.ResponseWriter, r *http.Request, webhookInfo WebhookObject) {
+func addDocument(w http.ResponseWriter, webhookInfo WebhookObject) {
 	// Add element in embedded structure. Adds the info by using the WebhookObject struct
 	id, _, err := client.Collection(COLLECTION).Add(ctx,
 		map[string]interface{}{
@@ -46,7 +46,7 @@ func addDocument(w http.ResponseWriter, r *http.Request, webhookInfo WebhookObje
 /*
 Returns all the documents as well as the information in the documents
 */
-func returnWebhooks(w http.ResponseWriter, r *http.Request) []WebhookObject {
+func returnWebhooks() []WebhookObject {
 	// Collective retrieval of messages
 	collection := client.Collection(COLLECTION)             // Loop through collection "webhooks"
 	allDocuments, err := collection.Documents(ctx).GetAll() //Loops through all entries in collection
@@ -66,12 +66,7 @@ func returnWebhooks(w http.ResponseWriter, r *http.Request) []WebhookObject {
 		tempWebhook.ISO = data["country"].(string)
 		tempWebhook.Calls = int(data["calls"].(int64))
 		tempWebhook.Invocations = int(data["invocations"].(int64))
-		//Tries to add data to WebhookObject struct
-		/*err = webhook.DataTo(&tempWebhook)
-		//Error handling if it doesn't succeed
-		if err != nil {
-			fmt.Println("Error unmarshaling")
-		}*/
+
 		//Adds the webhook info to the tempInfo
 		tempInfo = append(tempInfo, tempWebhook)
 	}

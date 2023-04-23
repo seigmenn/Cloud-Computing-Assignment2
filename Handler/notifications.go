@@ -47,7 +47,7 @@ func NotificationsHandler(w http.ResponseWriter, r *http.Request) {
 
 func NotificationsDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	splitURL := strings.Split(r.URL.Path, "/")
-	returnData := returnWebhooks(w, r)
+	returnData := returnWebhooks()
 
 	// If URL is wrong or if the supposed id is empty, checks for that
 	if len(splitURL) != 5 || splitURL[4] == "" {
@@ -149,7 +149,7 @@ func NotificationsPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// If no errors, then append safely to firebase webhook
-	addDocument(w, r, temporaryRetrieval)
+	addDocument(w, temporaryRetrieval)
 	tempWebhooks = append(tempWebhooks, temporaryRetrieval)
 	w.WriteHeader(http.StatusCreated)
 	log.Println("Has successfully registered webhook to storage.")
@@ -158,7 +158,7 @@ func NotificationsPostHandler(w http.ResponseWriter, r *http.Request) {
 
 func NotificationsGetHandler(w http.ResponseWriter, r *http.Request) {
 	splitURL := strings.Split(r.URL.Path, "/")
-	returnData := returnWebhooks(w, r)
+	returnData := returnWebhooks()
 
 	if len(splitURL) != 5 {
 		http.Error(w, "Error; Incorrect usage of URL.", http.StatusBadRequest)
@@ -170,7 +170,6 @@ func NotificationsGetHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Attempted to find webhooks, but there are none registered at all.")
 		return
 	}
-
 
 	var temp []WebhookObject
 	for _, v := range returnData {

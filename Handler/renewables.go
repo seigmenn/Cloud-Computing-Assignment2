@@ -45,7 +45,7 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 	var countries []Country
 	var tmpCountry CountryOut
 	var outCountries []CountryOut
-	returnData := returnWebhooks(w, r)
+	returnData := returnWebhooks()
 
 	//If country is specified search with isocode
 	if isocode != "" {
