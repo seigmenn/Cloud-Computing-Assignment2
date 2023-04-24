@@ -11,9 +11,10 @@
 		- Deletion of webhook
 		- View registered webhook
 	- Status endpoint
-
+	- Dockerfile
 
 # General notes
+The version of this app hosted on docker can be found here: http://10.212.172.23:8080/ 
 Be mindful that the specified endpoint for this service may not be the exact same as the one used in the assignment description.
 
 # Repository layout
@@ -352,4 +353,15 @@ Example response:
 
 ```
 
+#Dockerfile
+The contents of the Dockerfile used to build the go-app:
 
+```                                                                                  
+FROM golang:1.19
+WORKDIR /build
+ADD go.mod .
+COPY . .
+RUN go build -o /main
+EXPOSE 80
+CMD ["/main"]
+```
