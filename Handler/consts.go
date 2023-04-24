@@ -9,6 +9,7 @@ const NOTIFICATIONSPATH = BASEPATH + "notifications/"               //Path to no
 const STATUSPATH = BASEPATH + "status"                              //Path to status endpoint
 const COUNTRIESAPIALPHA = "http://129.241.150.113:8080/v3.1/alpha/" //URL of Countries API for search with alpha-code
 const COUNTRIESAPIURL = "http://129.241.150.113:8080"               //URL to root of Countries API for status endpoint
+const FIREBASEURL = "https://console.firebase.google.com/u/0/"
 const CSVPATH = "renewable-share-energy.csv"
 const COLLECTION = "webhooks" //Collection name in Firestore
 

@@ -17,7 +17,13 @@ Diagnostic handler to showcases access to request content (headers, body, method
 */
 func StatusHandler(w http.ResponseWriter, r *http.Request) {
 
+	//Send request to Countries API
 	countriesResp, err := http.Get(COUNTRIESAPIURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	//Send request to Firebase
+	firebaseResp, err := http.Get(FIREBASEURL)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,7 +31,7 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 	output := "{" + LINEBREAK
 	// Prepares return info with API status codes, version number and uptime
 	output += "\tcountries_api: " + strconv.Itoa(countriesResp.StatusCode) + " - " + http.StatusText(countriesResp.StatusCode) + LINEBREAK
-	output += "\tnotification_db: " + LINEBREAK
+	output += "\tnotification_db: " + strconv.Itoa(firebaseResp.StatusCode) + " - " + http.StatusText(firebaseResp.StatusCode) + LINEBREAK
 	output += "\twebhooks: " + strconv.Itoa(len(returnWebhooks())) + LINEBREAK
 	output += "\tversion: v1" + LINEBREAK
 	output += "\tuptime: " + Uptime(StartTime).Round(100000000).String() + LINEBREAK + "}" //Converting time.Duration to string
