@@ -59,6 +59,7 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 				return
 			}
 		}
+		//isocode is updated to have the actual ISO code regardless if the user specified with full name or ISO code
 		isocode = iso
 		countries = append(countries, tmp)
 	} else { //If not specified all countries are added
@@ -142,7 +143,8 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 			if u.ISO == y.ISO || u.ISO == "" {
 				// If it does, calls function invocationUpdate and increment invocation counter and check if invocation call can be made
 				invocationUpdate(w, u)
-				if math.Mod(float64(returnData[f].Invocations+1), float64(u.Calls)) == 0 {
+				returnData[f].Invocations += 1
+				if math.Mod(float64(returnData[f].Invocations), float64(u.Calls)) == 0 {
 					// If so, attempts to retrieve the country (or just "" in case of no iso specified)
 					returnName := ""
 					if u.ISO != "" {
@@ -189,6 +191,7 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 			return
 		}
 		countries = append(countries, tmp)
+		//isocode is updated to have the actual ISO code regardless if the user specified with full name or ISO code
 		isocode = iso
 	} else { //If not specified all countries are added
 		tmp, err := readFromCSV(CSVPATH)
@@ -263,9 +266,8 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 		for f, u := range tempWebhooks {
 			// If the webhook's ISO is allike to the isocode or empty
 			if u.ISO == isocode || u.ISO == "" {
-				// If it is, then chance of invocation - goes forth here
-
-				// Increments total invocations of webhook
+				// If it does, calls function invocationUpdate and increment invocation counter and check if invocation call can be made
+				invocationUpdate(w, u)
 				tempWebhooks[f].Invocations += 1
 				// Checks if the amount of invocations modulates with specified amount of calls
 				if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
@@ -290,7 +292,8 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 		// every webhook's invocation counter with 1
 	} else {
 		for f, u := range tempWebhooks {
-			// Increments invocation counter and checks if an invocation call can be made
+			// If it does, calls function invocationUpdate and increment invocation counter and check if invocation call can be made
+			invocationUpdate(w, u)
 			tempWebhooks[f].Invocations += 1
 			if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
 				// If so, attempts to retrieve the country (or just "" in case of no iso specified)
