@@ -259,7 +259,7 @@ Successful response:
 You are now deleting the following information:
 Identification: {id}
 URL: (webhook.URL)
-In which it was focued to look at the country of (webhook.ISO) and report a notification every (webhook.Calls) invocations.
+In which it was focused to look at the country of (webhook.ISO) and report a notification every (webhook.Calls) invocations.
 ```
 
 
@@ -363,17 +363,17 @@ Example response:
 
 # Openstack and Docker deployment 
 This assignment is hosted via Openstack and by the use of Docker. <br>
-For this assignment, this git repo has been copied to a virtual machine hosted on Openstack. Using a Dockerfile (see next point for further info) a docker image is created and hosted on the virtual machines IP-address.   
+For this assignment, this git repo has been copied to a virtual machine hosted on Openstack. <br> Using a Dockerfile (see next point for further info) a docker image is created using the command `docker build --tag app:1 .` where `tag` sets the name `app` for the build and specifies the version of the app `1` and the `.` represents where the Dockerfile is located. <br> To run the image  you use the docker run command `docker run -d -p 8080:8080 --restart always app:1` where `-d` starts it in detached mode, `-p` opens up the specified port numbers, `--restart always` makes the image restart automatically and both the name of the image and the version is specified. 
 
 ## Dockerfile
 The contents of the Dockerfile used to build the go-app:
 
 ```                                                                                  
-FROM golang:1.19
-WORKDIR /build
-ADD go.mod .
+FROM golang:1.19		#Specifying which version of go to use
+WORKDIR /build			#Creating a work directory for the go build
+ADD go.mod .			#Adds the external modules into the work directory
 COPY . .
-RUN go build -o /main
-EXPOSE 80
-CMD ["/main"]
+RUN go build -o /main 	#building the go app into a binary called main
+EXPOSE 80				#Exposing the proper ports to make it accesible ecternally
+CMD ["/main"]			#Setting the command that will be run when the image is run
 ```
