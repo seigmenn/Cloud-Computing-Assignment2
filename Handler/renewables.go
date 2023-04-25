@@ -13,25 +13,15 @@ import (
 )
 
 func RenewablesHandler(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
-	endpoint := ""
-	country := ""
-	//If country is not specified
-	if len(parts) == 5 {
-		endpoint = parts[len(parts)-1]
-	}
-	//If country is specified
-	if len(parts) == 6 {
-		endpoint = parts[len(parts)-2]
-		country = strings.ToUpper(parts[len(parts)-1])
-	}
 
-	switch endpoint {
+	parts := strings.Split(r.URL.Path, "/")
+
+	switch parts[4] {
 	case "current":
-		HandleRenewablesCurrent(w, r, country)
+		HandleRenewablesCurrent(w, r)
 		break
 	case "history":
-		HandleRenewablesHistory(w, r, country)
+		HandleRenewablesHistory(w, r)
 		break
 	default:
 		http.Error(w, "Endpoint does not exist. Renewables has endpoints \"/current\" and \"/history\"", http.StatusBadRequest)
@@ -39,13 +29,16 @@ func RenewablesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode string) {
+func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request) {
 	handlingTime := time.Now()
+	http.Header.Add(w.Header(), "content-type", "application/json")
 	neighboursPar := r.URL.Query().Get("neighbours")
 	var countries []Country
 	var tmpCountry CountryOut
 	var outCountries []CountryOut
 	returnData := returnWebhooks()
+	parts := strings.Split(r.URL.Path, "/")
+	isocode := strings.ToUpper(parts[len(parts)-1])
 
 	//If country is specified search with isocode
 	if isocode != "" {
@@ -125,7 +118,7 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 	searchInfoOutput := "Number of results: " + strconv.Itoa(len(outCountries)) + LINEBREAK
 	searchInfoOutput += "Found in " + Uptime(handlingTime).Round(10000000).String() + LINEBREAK
 	//writes to responseWriter
-	_, err = fmt.Fprintf(w, "%v", searchInfoOutput)
+	//_, err = fmt.Fprintf(w, "%v", searchInfoOutput)
 	if err != nil {
 		http.Error(w, "Error when returning InfoOutput", http.StatusInternalServerError)
 	}
@@ -167,12 +160,15 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request, isocode str
 	}
 }
 
-func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode string) {
+func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request) {
 	handlingTime := time.Now() //Start clock
 	http.Header.Add(w.Header(), "content-type", "application/json")
 	var countries []Country
 	var outCountries []CountryOut
 	var tmpCountry CountryOut
+	returnData := returnWebhooks()
+	parts := strings.Split(r.URL.Path, "/")
+	isocode := strings.ToUpper(parts[len(parts)-1])
 
 	//Get parameters from request
 	beginTime, _ := strconv.Atoi(r.URL.Query().Get("begin"))
@@ -263,14 +259,14 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 	// Checks if isocode generated is empty or not;
 	if isocode != "" {
 		// if not, compare every webhook with this isocode
-		for f, u := range tempWebhooks {
+		for f, u := range returnData {
 			// If the webhook's ISO is allike to the isocode or empty
 			if u.ISO == isocode || u.ISO == "" {
 				// If it does, calls function invocationUpdate and increment invocation counter and check if invocation call can be made
 				invocationUpdate(w, u)
-				tempWebhooks[f].Invocations += 1
+				returnData[f].Invocations += 1
 				// Checks if the amount of invocations modulates with specified amount of calls
-				if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
+				if math.Mod(float64(returnData[f].Invocations), float64(u.Calls)) == 0 {
 					// If so, attempts to retrieve the country (or just "" in case of no iso specified)
 					returnName := ""
 					if u.ISO != "" {
@@ -282,7 +278,7 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request, isocode str
 						returnName = countryName.Name
 					}
 					// Proceeds to invocation call in invocationCall, refer to notifications.go
-					invocationCall(w, tempWebhooks[f], returnName)
+					invocationCall(w, returnData[f], returnName)
 				}
 			}
 		}

@@ -40,15 +40,29 @@ func addDocument(w http.ResponseWriter, webhookInfo WebhookObject) {
 		http.Error(w, id.ID, http.StatusCreated)
 		return
 	}
-
 }
 
 /*
 Returns all the documents as well as the information in the documents
 */
 func returnWebhooks() []WebhookObject {
+	ctx = context.Background()
+	client, err := GetFirebaseClient(ctx)
+	if err != nil {
+		log.Fatal("Error getting Firebase client:", err)
+	}
+	if client == nil {
+		log.Fatal("Firebase client is nil")
+	}
+
+	//Get the Firestore client so we can interact with the database
+	fsClient, err := client.Firestore(ctx)
+	if err != nil {
+		log.Println("Error getting Firestore client: ", err.Error())
+	}
+
 	// Collective retrieval of messages
-	collection := client.Collection(COLLECTION)             // Loop through collection "webhooks"
+	collection := fsClient.Collection(COLLECTION)           // Loop through collection "webhooks"
 	allDocuments, err := collection.Documents(ctx).GetAll() //Loops through all entries in collection
 	if err != nil {
 		fmt.Println("Error with collection")
@@ -72,6 +86,7 @@ func returnWebhooks() []WebhookObject {
 	}
 
 	return tempInfo
+
 }
 
 /*
