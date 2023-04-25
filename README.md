@@ -11,10 +11,11 @@
 		- Deletion of webhook
 		- View registered webhook
 	- Status endpoint
+- Openstack and Docker deployment
 	- Dockerfile
 
 # General notes
-The version of this app hosted on docker can be found here: http://10.212.172.23:8080/ 
+The version of this app hosted on docker can be found here: http://10.212.172.23:8080/ (remember to be on the NTNU network)<br>
 Be mindful that the specified endpoint for this service may not be the exact same as the one used in the assignment description.
 
 # Repository layout
@@ -350,10 +351,21 @@ Things checked in the status endpoint include:<br>
 
 Example response:
 ```
+{
+	countries_api: 200 - OK
+	notification_db: 200 - OK
+	webhooks: 6
+	version: v1
+	uptime: 17h5m44.4s
+}
 
 ```
 
-#Dockerfile
+# Openstack and Docker deployment 
+This assignment is hosted via Openstack and by the use of Docker. <br>
+For this assignment, this git repo has been copied to a virtual machine hosted on Openstack. Using a Dockerfile (see next point for further info) a docker image is created and hosted on the virtual machines IP-address.   
+
+## Dockerfile
 The contents of the Dockerfile used to build the go-app:
 
 ```                                                                                  
