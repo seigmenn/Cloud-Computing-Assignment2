@@ -11,9 +11,11 @@
 		- Deletion of webhook
 		- View registered webhook
 	- Status endpoint
-
+- Openstack and Docker deployment
+	- Dockerfile
 
 # General notes
+The version of this app hosted on docker can be found here: http://10.212.172.23:8080/ (remember to be on the NTNU network)<br>
 Be mindful that the specified endpoint for this service may not be the exact same as the one used in the assignment description.
 
 # Repository layout
@@ -257,7 +259,7 @@ Successful response:
 You are now deleting the following information:
 Identification: {id}
 URL: (webhook.URL)
-In which it was focued to look at the country of (webhook.ISO) and report a notification every (webhook.Calls) invocations.
+In which it was focused to look at the country of (webhook.ISO) and report a notification every (webhook.Calls) invocations.
 ```
 
 
@@ -349,7 +351,29 @@ Things checked in the status endpoint include:<br>
 
 Example response:
 ```
+{
+	countries_api: 200 - OK
+	notification_db: 200 - OK
+	webhooks: 6
+	version: v1
+	uptime: 17h5m44.4s
+}
 
 ```
 
+# Openstack and Docker deployment 
+This assignment is hosted via Openstack and by the use of Docker. <br>
+For this assignment, this git repo has been copied to a virtual machine hosted on Openstack. <br> Using a Dockerfile (see next point for further info) a docker image is created using the command `docker build --tag app:1 .` where `tag` sets the name `app` for the build and specifies the version of the app `1` and the `.` represents where the Dockerfile is located. <br> To run the image  you use the docker run command `docker run -d -p 8080:8080 --restart always app:1` where `-d` starts it in detached mode, `-p` opens up the specified port numbers, `--restart always` makes the image restart automatically and both the name of the image and the version is specified. 
 
+## Dockerfile
+The contents of the Dockerfile used to build the go-app:
+
+```                                                                                  
+FROM golang:1.19		#Specifying which version of go to use
+WORKDIR /build			#Creating a work directory for the go build
+ADD go.mod .			#Adds the external modules into the work directory
+COPY . .
+RUN go build -o /main 	#building the go app into a binary called main
+EXPOSE 80				#Exposing the proper ports to make it accesible ecternally
+CMD ["/main"]			#Setting the command that will be run when the image is run
+```
