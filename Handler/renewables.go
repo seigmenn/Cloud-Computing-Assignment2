@@ -138,8 +138,8 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request) {
 			// Checks if a webhook's isocode is either empty or matching with one country's
 			if u.ISO == y.ISO || u.ISO == "" {
 				// If it does, calls function invocationUpdate and increment invocation counter and check if invocation call can be made
-				invocationUpdate(w, u)
 				returnData[f].Invocations += 1
+				invocationUpdate(w, u)
 				if math.Mod(float64(returnData[f].Invocations), float64(u.Calls)) == 0 {
 					// If so, attempts to retrieve the country (or just "" in case of no iso specified)
 					returnName := ""
@@ -268,8 +268,9 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request) {
 			// If the webhook's ISO is allike to the isocode or empty
 			if u.ISO == isocode || u.ISO == "" {
 				// If it does, calls function invocationUpdate and increment invocation counter and check if invocation call can be made
-				invocationUpdate(w, u)
 				returnData[f].Invocations += 1
+				invocationUpdate(w, u)
+
 				// Checks if the amount of invocations modulates with specified amount of calls
 				if math.Mod(float64(returnData[f].Invocations), float64(u.Calls)) == 0 {
 					// If so, attempts to retrieve the country (or just "" in case of no iso specified)
@@ -292,11 +293,11 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request) {
 		// made during the creation of them, a simplified process would be to just increment
 		// every webhook's invocation counter with 1
 	} else {
-		for f, u := range tempWebhooks {
+		for f, u := range returnData {
 			// If it does, calls function invocationUpdate and increment invocation counter and check if invocation call can be made
 			invocationUpdate(w, u)
-			tempWebhooks[f].Invocations += 1
-			if math.Mod(float64(tempWebhooks[f].Invocations), float64(u.Calls)) == 0 {
+			returnData[f].Invocations += 1
+			if math.Mod(float64(returnData[f].Invocations), float64(u.Calls)) == 0 {
 				// If so, attempts to retrieve the country (or just "" in case of no iso specified)
 				returnName := ""
 				if u.ISO != "" {
@@ -308,7 +309,7 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request) {
 					returnName = countryName.Name
 				}
 				// Proceeds to invocation call in invocationCall, refer to notifications.go
-				invocationCall(w, tempWebhooks[f], returnName)
+				invocationCall(w, returnData[f], returnName)
 			}
 		}
 	}
