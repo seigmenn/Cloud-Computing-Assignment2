@@ -1,4 +1,4 @@
-package Testing
+package main
 
 import (
 	"assignment-2/Handler"
