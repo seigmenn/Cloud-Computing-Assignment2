@@ -39,6 +39,9 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request) {
 	returnData := returnWebhooks()
 	parts := strings.Split(r.URL.Path, "/")
 	isocode := strings.ToUpper(parts[len(parts)-1])
+	if len(parts) == 5 {
+		isocode = ""
+	}
 
 	//If country is specified search with isocode
 	if isocode != "" {
@@ -169,7 +172,9 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request) {
 	returnData := returnWebhooks()
 	parts := strings.Split(r.URL.Path, "/")
 	isocode := strings.ToUpper(parts[len(parts)-1])
-
+	if len(parts) == 5 {
+		isocode = ""
+	}
 	//Get parameters from request
 	beginTime, _ := strconv.Atoi(r.URL.Query().Get("begin"))
 	endTime, _ := strconv.Atoi(r.URL.Query().Get("end"))
