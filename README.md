@@ -22,14 +22,14 @@ Be mindful that the specified endpoint for this service may not be the exact sam
 ```
 .
 ├── Handler                    : Module for API
-│   ├── CSVhandler.go          :
+│   ├── CSVhandler.go          : Handler for CSV-files
 │   ├── consts.go              : Internal consts
 │   ├── notifications.go       : Handler for weebhooks
 │   ├── renewables.go          : Handler for renewables API
 │   ├── status.go              : Handler for status API
 │   └── structs.go             : Internal API structs
-├── db_webhooks.go             :
-├── go.mod                     :
+├── db_webhooks.go             : Modules
+├── go.mod                     : Modules
 ├── main.go                    : Main application
 ├── renewable-share-energy.csv : Data used by handler
 └── README.md
@@ -43,7 +43,7 @@ Path: /energy/v1/renewables/current/{country}?{neighbours=bool}
 The endpoint returns the latest percentage of renewables in the energy mix.
 
 This endpoint includes the parameters:<br>
-`{country}` - a 3-letter country code (optional)<br>
+`{country}` - a 3-letter country code or a full country name (optional)<br>
 `{neighbours=bool}` - a bool indicating whether the values of neighbouring countries should be shown (optional)<br>
 <br>Example request with country code and neighbours:<br>
 `/energy/v1/renewables/current/nor?neighbours=true`<br>
