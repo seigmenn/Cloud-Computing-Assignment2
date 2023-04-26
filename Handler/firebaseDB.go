@@ -5,7 +5,6 @@ import (
 	"context"                       // State handling across API boundaries; part of native GoLang API
 	"errors"
 	"firebase.google.com/go"
-	"fmt"
 	"google.golang.org/api/option"
 	"log"
 	"net/http"
@@ -42,51 +41,97 @@ func addDocument(w http.ResponseWriter, webhookInfo WebhookObject) {
 	}
 }
 
-/*
-Returns all the documents as well as the information in the documents
-*/
 func returnWebhooks() []WebhookObject {
-	ctx = context.Background()
+	// Create a new context
+	ctx := context.Background()
+
+	// Get a Firebase client
 	client, err := GetFirebaseClient(ctx)
 	if err != nil {
-		log.Fatal("Error getting Firebase client:", err)
-	}
-	if client == nil {
-		log.Fatal("Firebase client is nil")
+		log.Println("Error getting Firebase client:", err)
+		return nil
 	}
 
-	//Get the Firestore client so we can interact with the database
+	// Check if the client is nil
+	if client == nil {
+		log.Println("Firebase client is nil")
+		return nil
+	}
+
+	// Get a Firestore client
 	fsClient, err := client.Firestore(ctx)
 	if err != nil {
-		log.Println("Error getting Firestore client: ", err.Error())
+		log.Println("Error getting Firestore client:", err)
+		return nil
 	}
 
-	// Collective retrieval of messages
-	collection := fsClient.Collection(COLLECTION)           // Loop through collection "webhooks"
-	allDocuments, err := collection.Documents(ctx).GetAll() //Loops through all entries in collection
+	// Get a reference to the collection
+	collection := fsClient.Collection(COLLECTION)
+
+	// Get all documents in the collection
+	allDocuments, err := collection.Documents(ctx).GetAll()
 	if err != nil {
-		fmt.Println("Error with collection")
+		log.Println("Error retrieving documents:", err)
+		return nil
 	}
 
+	// Create a temporary slice to store WebhookObjects
 	var tempInfo []WebhookObject
 
-	//For-loop that runs through all the entries in collection webhooks
+	// Loop through all documents
 	for _, webhook := range allDocuments {
-		//Temp struct
+		// Create a temporary WebhookObject
 		var tempWebhook WebhookObject
-		data := webhook.Data()
-		tempWebhook.ID = data["webhook_id"].(string)
-		tempWebhook.URL = data["url"].(string)
-		tempWebhook.ISO = data["country"].(string)
-		tempWebhook.Calls = int(data["calls"].(int64))
-		tempWebhook.Invocations = int(data["invocations"].(int64))
 
-		//Adds the webhook info to the tempInfo
+		// Get the data from the document
+		data := webhook.Data()
+
+		// Get the webhook ID as a string
+		id, ok := data["webhook_id"].(string)
+		if !ok {
+			log.Println("webhook_id is not a string")
+			continue
+		}
+		tempWebhook.ID = id
+
+		// Get the webhook URL as a string
+		url, ok := data["url"].(string)
+		if !ok {
+			log.Println("url is not a string")
+			continue
+		}
+		tempWebhook.URL = url
+
+		// Get the ISO code for the country as a string
+		iso, ok := data["country"].(string)
+		if !ok {
+			log.Println("country is not a string")
+			continue
+		}
+		tempWebhook.ISO = iso
+
+		// Get the number of calls as an int
+		calls, ok := data["calls"].(int64)
+		if !ok {
+			log.Println("calls is not an int64")
+			continue
+		}
+		tempWebhook.Calls = int(calls)
+
+		// Get the number of invocations as an int
+		invocations, ok := data["invocations"].(int64)
+		if !ok {
+			log.Println("invocations is not an int64")
+			continue
+		}
+		tempWebhook.Invocations = int(invocations)
+
+		// Add the WebhookObject to the temporary slice
 		tempInfo = append(tempInfo, tempWebhook)
 	}
 
+	// Return the slice of WebhookObjects
 	return tempInfo
-
 }
 
 /*
@@ -157,6 +202,9 @@ func deleteDocument(w http.ResponseWriter, ctx context.Context, keyID string) er
 Function that updates the number of invocations on the document in the Firebase-collection
 */
 func invocationUpdate(w http.ResponseWriter, webhook WebhookObject) {
+
+	ctx := context.Background()
+
 	//Get Firebase client using the service account provided from GetFirebaseClient
 	client, err := GetFirebaseClient(ctx)
 	if err != nil {

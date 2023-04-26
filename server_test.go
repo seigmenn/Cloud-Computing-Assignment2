@@ -9,8 +9,9 @@ import (
 	"testing"
 )
 
-const URL = Handler.BASEPATH + "renewables/current/nor?neighbours=true"
-const URL2 = Handler.BASEPATH + "renewables/history/nor?begin=2015&end=2017"
+const URLCURRENT = Handler.BASEPATH + "renewables/current/nor?neighbours=true"
+const URLHISTORY = Handler.BASEPATH + "renewables/history/nor?begin=2015&end=2017"
+const URLNOTIFICATIONS = Handler.BASEPATH + "notifications/"
 
 /*
 Tests students service, but requires manual start of service prior to invocation.
@@ -21,7 +22,7 @@ func TestHttpGetCountryCurrentManual(t *testing.T) {
 	client := http.Client{}
 
 	// Retrieve content from server
-	res, err := client.Get("http://localhost:8080" + URL)
+	res, err := client.Get("http://localhost:8080" + URLCURRENT)
 	if err != nil {
 		t.Fatal("Get request to URL failed. Check whether server has been started manually! Error:", err.Error())
 	}
@@ -73,7 +74,7 @@ func TestHttpGetCountryCurrentManual(t *testing.T) {
 }
 
 /*
-Tests students service, and automated setup and tear down of infrastructure.
+Tests Renewables service, and automated setup and tear down of infrastructure.
 */
 func TestHttpGetCountryCurrentAutomated(t *testing.T) {
 
@@ -81,13 +82,13 @@ func TestHttpGetCountryCurrentAutomated(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(Handler.HandleRenewablesCurrent))
 
 	// Ensure it is torn down properly at the end
-	//defer server.Close()
+	defer server.Close()
 
 	// Create client instance
 	client := http.Client{}
 
 	// Retrieve content from server
-	res, err := client.Get(server.URL + URL)
+	res, err := client.Get(server.URL + URLCURRENT)
 	if err != nil {
 		t.Fatal("Get request to URL failed:", err.Error())
 	}
@@ -138,21 +139,21 @@ func TestHttpGetCountryCurrentAutomated(t *testing.T) {
 }
 
 /*
-Tests students service, and automated setup and tear down of infrastructure.
+Tests Renewables service, and automated setup and tear down of infrastructure.
 */
 func TestHttpGetCountryHistoryAutomated(t *testing.T) {
 
-	// Set up infrastructure to be used for invocation
+	// Set up infrastructure to be used for invocation - important: wrap handler function in http.HandlerFunc()
 	server := httptest.NewServer(http.HandlerFunc(Handler.HandleRenewablesHistory))
 
 	// Ensure it is torn down properly at the end
-	//defer server.Close()
+	defer server.Close()
 
 	// Create client instance
 	client := http.Client{}
 
 	// Retrieve content from server
-	res, err := client.Get(server.URL + URL2)
+	res, err := client.Get(server.URL + URLHISTORY)
 	if err != nil {
 		t.Fatal("Get request to URL failed:", err.Error())
 	}
@@ -194,5 +195,39 @@ func TestHttpGetCountryHistoryAutomated(t *testing.T) {
 			t.Fatal("Invalid country year:", country.Year)
 		}
 	}
+}
 
+/*
+Tests notification GET service, and automated setup and tear down of infrastructure.
+*/
+func TestHttpGetNotificationAutomated(t *testing.T) {
+
+	// Set up infrastructure to be used for invocation
+	server := httptest.NewServer(http.HandlerFunc(Handler.NotificationsGetHandler))
+
+	// Ensure it is torn down properly at the end
+	defer server.Close()
+
+	// Create client instance
+	client := http.Client{}
+
+	webhookID := "webhook3"
+
+	// Retrieve content from server
+	res, err := client.Get(server.URL + URLNOTIFICATIONS + webhookID)
+	if err != nil {
+		t.Fatal("Get request to URL failed:", err.Error())
+	}
+
+	// Decode array
+	s := Handler.WebhookObject{}
+	err2 := json.NewDecoder(res.Body).Decode(&s)
+	if err2 != nil {
+		t.Fatal("Error during decoding:", err2.Error())
+	}
+
+	if s.ID != webhookID || s.URL != "https://webhook.site/4950ee00-34bb-449e-894d-4a09c3da997e" ||
+		s.ISO != "SWE" || s.Calls != 2 {
+		t.Fatal("Data for webhook is wrong: ")
+	}
 }

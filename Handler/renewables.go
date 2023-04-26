@@ -187,6 +187,7 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request) {
 	beginTime, _ := strconv.Atoi(r.URL.Query().Get("begin"))
 	endTime, _ := strconv.Atoi(r.URL.Query().Get("end"))
 	info, _ := strconv.Atoi(r.URL.Query().Get("info"))
+
 	if beginTime == 0 {
 		beginTime = 1950 //Default value 1950
 	}
@@ -327,4 +328,14 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+}
+
+func countriesBordersStub(iso string) []string {
+	var norwayBorders []string
+	norwayBorders = append(norwayBorders, "SWE", "FIN", "RUS")
+
+	if iso == "NOR" {
+		return norwayBorders
+	}
+	return []string{}
 }
