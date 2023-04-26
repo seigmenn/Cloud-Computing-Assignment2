@@ -4,8 +4,8 @@ import (
 	"assignment-2/Handler"
 	"context"
 	firebase "firebase.google.com/go"
+	"fmt"
 	"google.golang.org/api/option"
-	"reflect"
 	"testing"
 )
 
@@ -81,11 +81,12 @@ func TestAddAndGetDocumentFirebase(t *testing.T) {
 			"expected %v", docData, correctData)
 	}
 
-	//For-loop that iterates over the correctData map. Checks if the value of each key
-	//in docData map matches the expected value using reflect.DeepEqual() function
+	//For-loop that iterates over the correctData map. Since there's both integers and strings
+	//in the map, it uses fmt.Sprintf to change both values to strings then checking if they're the same
 	//If they're not the same then fails and prints an error message
 	for key, testValue := range correctData {
-		if !reflect.DeepEqual(docData[key], testValue) {
+		retrievedValue := docData[key]
+		if fmt.Sprintf("%v", retrievedValue) != fmt.Sprintf("%v", testValue) {
 			t.Fatalf("Document data is not the same as the correct data. Got: %v,"+
 				"expected: %v", docData, correctData)
 		}
