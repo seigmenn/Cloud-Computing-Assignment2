@@ -15,7 +15,7 @@ var ctx context.Context
 var client *firestore.Client
 
 /*
-Reads string from the body and sends it to Firestore so it can be registered as a document
+Function that sends data about a webhook to the Firestore in Firebase so it can be registered as a document there.
 */
 func addDocument(w http.ResponseWriter, webhookInfo WebhookObject) {
 	// Add element in embedded structure. Adds the info by using the WebhookObject struct
@@ -41,6 +41,10 @@ func addDocument(w http.ResponseWriter, webhookInfo WebhookObject) {
 	}
 }
 
+/*
+Function that returns all the documents in the webhooks collection the Firestore Client in the Firebase database
+holds. It runs through each entry in the collection and returns this information.
+*/
 func returnWebhooks() []WebhookObject {
 	// Create a new context
 	ctx := context.Background()
@@ -58,18 +62,18 @@ func returnWebhooks() []WebhookObject {
 		return nil
 	}
 
-	// Get a Firestore client
+	//Get the Firestore client, so we can interact with the database
+
 	fsClient, err := client.Firestore(ctx)
 	if err != nil {
 		log.Println("Error getting Firestore client:", err)
 		return nil
 	}
 
-	// Get a reference to the collection
-	collection := fsClient.Collection(COLLECTION)
+	// Collective retrieval of the documents
+	collection := fsClient.Collection(COLLECTION)           // Loop through collection "webhooks"
+	allDocuments, err := collection.Documents(ctx).GetAll() //Loops through all entries in collection
 
-	// Get all documents in the collection
-	allDocuments, err := collection.Documents(ctx).GetAll()
 	if err != nil {
 		log.Println("Error retrieving documents:", err)
 		return nil
@@ -135,12 +139,12 @@ func returnWebhooks() []WebhookObject {
 }
 
 /*
-Function that returns firebase app client by taking in a context.Context
+Function that returns Firebase Client by taking in a context.Context
 parameter and returns a tuple to the pointer to firebase.App and error object
 */
 func GetFirebaseClient(ctx context.Context) (*firebase.App, error) {
 	// Initialize a Firebase app using a service account file
-	sa := option.WithCredentialsFile("group12-assignment2-sa.json")
+	sa := option.WithCredentialsFile(SERVICEACCOUNT)
 
 	//Creates a new Firebase app instance with the given information and the service account
 	app, err := firebase.NewApp(ctx, nil, sa)
@@ -153,8 +157,8 @@ func GetFirebaseClient(ctx context.Context) (*firebase.App, error) {
 }
 
 /*
-Deletes a document and it's entries in the Firebase Database by
-going through the Firestore collection and using the keyID
+Function that deletes a document and it's entries in the Firebase Database by
+going through the Firestore collection and using the webhook_id.
 */
 func deleteDocument(w http.ResponseWriter, ctx context.Context, keyID string) error {
 	//Get Firebase client using the service account provided from GetFirebaseClient
@@ -199,7 +203,7 @@ func deleteDocument(w http.ResponseWriter, ctx context.Context, keyID string) er
 }
 
 /*
-Function that updates the number of invocations on the document in the Firebase-collection
+Function that updates the number of invocations on the relevant document/webhook in the Firebase-collection
 */
 func invocationUpdate(w http.ResponseWriter, webhook WebhookObject) {
 
@@ -246,7 +250,7 @@ Firebase main connects the program to the firebase database
 func Firebasemain() {
 	// Initialize a Firebase app using a service account file
 	ctx = context.Background()
-	sa := option.WithCredentialsFile("group12-assignment2-sa.json")
+	sa := option.WithCredentialsFile(SERVICEACCOUNT)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalf("error initializing app: %v\n", err)

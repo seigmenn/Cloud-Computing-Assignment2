@@ -42,9 +42,9 @@ func main() {
 		log.Println("$PORT has not been set. Default: 8080")
 		port = "8080"
 	}
+
+	//Connect firebase to main
 	Handler.Firebasemain()
-	//Test of CSV reading function
-	//printCountries()
 
 	// Default handler for requests (just displays information and points to /diag)
 	http.HandleFunc("/", defaultHandler)

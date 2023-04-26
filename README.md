@@ -38,15 +38,16 @@ Be mindful that the specified endpoint for this service may not be the exact sam
 ## Renewable percentages<br>
 ### Current percentage of renewables
 ```
-Path: /energy/v1/renewables/current/{country}?{neighbours=bool}
+Path: /energy/v1/renewables/current/{country}?{neighbours=bool}{info=1}
 ```
 The endpoint returns the latest percentage of renewables in the energy mix.
 
 This endpoint includes the parameters:<br>
 `{country}` - a 3-letter country code or a full country name (optional)<br>
 `{neighbours=bool}` - a bool indicating whether the values of neighbouring countries should be shown (optional)<br>
+`{info=1}` - if specified, number of matches and the time to return data(optional)<br>
 <br>Example request with country code and neighbours:<br>
-`/energy/v1/renewables/current/nor?neighbours=true`<br>
+`/energy/v1/renewables/current/nor?neighbours=true&info=1`<br>
 
 Example response:
 ```
@@ -86,8 +87,7 @@ Example request with country code:<br>
 
 Example response:
 ```
-Number of matches: 1
-Found in 0s
+
 [
  {
   "name": "United States",
@@ -100,7 +100,7 @@ Found in 0s
 
 ### Historical percentages of renewables
 ```
-Path: energy/v1/renewables/history/{country}{begin=year&end=year}
+Path: energy/v1/renewables/history/{country}?{begin=year&end=year}{info=1}
 ```
 This endpoint returns all the historical percentages of renewables in the energy mix. If no country is specified each country will return the mean value of all the historical percentages in the energy mix.
 
@@ -108,9 +108,10 @@ This endpoint returns all the historical percentages of renewables in the energy
 This endpoint includes the parameters:<br>
 `{country}` - a 3-letter country code (optional)<br>
 `{begin=year&end=year}` - limit the data returned to be within these two years (optional)<br>
+`{info=1}` - if specified, number of matches and the time to return data(optional)<br>
 
 Example request with country code:<br>
-`energy/v1/renewables/history/usa`<br>
+`energy/v1/renewables/history/usa?info=1`<br>
 
 Example response:
 ```
@@ -150,8 +151,6 @@ Example request with country code and begin and end year:<br>
 
 Example response:
 ```
-Number of results: 3
-Found in 10ms
 [
  {
   "name": "Norway",
@@ -179,8 +178,6 @@ Example request with no optional parameters (return mean values):<br>
 
 Example response:
 ```
-Number of matches: 103
-Found in 0s
 [
  ...
 	{
