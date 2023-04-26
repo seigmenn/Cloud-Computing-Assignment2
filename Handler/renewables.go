@@ -39,6 +39,8 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request) {
 	returnData := returnWebhooks()
 	parts := strings.Split(r.URL.Path, "/")
 	isocode := strings.ToUpper(parts[len(parts)-1])
+	//Get parameter from request
+	info, _ := strconv.Atoi(r.URL.Query().Get("info"))
 	if len(parts) == 5 {
 		isocode = ""
 	}
@@ -121,9 +123,15 @@ func HandleRenewablesCurrent(w http.ResponseWriter, r *http.Request) {
 	searchInfoOutput := "Number of results: " + strconv.Itoa(len(outCountries)) + LINEBREAK
 	searchInfoOutput += "Found in " + Uptime(handlingTime).Round(10000000).String() + LINEBREAK
 	//writes to responseWriter
-	//_, err = fmt.Fprintf(w, "%v", searchInfoOutput)
-	if err != nil {
-		http.Error(w, "Error when returning InfoOutput", http.StatusInternalServerError)
+	// write additional info if parameter is set
+	if info == 1 {
+		searchInfoOutput := "Number of results: " + strconv.Itoa(len(outCountries)) + LINEBREAK
+		searchInfoOutput += "Found in " + Uptime(handlingTime).Round(10000000).String() + LINEBREAK
+
+		_, err = fmt.Fprintf(w, "%v", searchInfoOutput)
+		if err != nil {
+			http.Error(w, "Error when returning InfoOutput", http.StatusInternalServerError)
+		}
 	}
 	_, err = fmt.Fprintf(w, "%v", string(output))
 	if err != nil {
@@ -178,6 +186,7 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request) {
 	//Get parameters from request
 	beginTime, _ := strconv.Atoi(r.URL.Query().Get("begin"))
 	endTime, _ := strconv.Atoi(r.URL.Query().Get("end"))
+	info, _ := strconv.Atoi(r.URL.Query().Get("info"))
 	if beginTime == 0 {
 		beginTime = 1950 //Default value 1950
 	}
@@ -249,12 +258,17 @@ func HandleRenewablesHistory(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error during pretty printing", http.StatusInternalServerError)
 		return
 	}
-	searchInfoOutput := "Number of results: " + strconv.Itoa(len(outCountries)) + LINEBREAK
-	searchInfoOutput += "Found in " + Uptime(handlingTime).Round(10000000).String() + LINEBREAK
+
 	//writes to responseWriter
-	_, err = fmt.Fprintf(w, "%v", searchInfoOutput)
-	if err != nil {
-		http.Error(w, "Error when returning InfoOutput", http.StatusInternalServerError)
+	// write additional info if parameter is set
+	if info == 1 {
+		searchInfoOutput := "Number of results: " + strconv.Itoa(len(outCountries)) + LINEBREAK
+		searchInfoOutput += "Found in " + Uptime(handlingTime).Round(10000000).String() + LINEBREAK
+
+		_, err = fmt.Fprintf(w, "%v", searchInfoOutput)
+		if err != nil {
+			http.Error(w, "Error when returning InfoOutput", http.StatusInternalServerError)
+		}
 	}
 	_, err = fmt.Fprintf(w, "%v", string(output))
 	if err != nil {
